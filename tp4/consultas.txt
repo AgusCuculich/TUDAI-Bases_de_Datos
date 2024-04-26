@@ -1,0 +1,41 @@
+SET search_path = unc_esq_voluntario;
+SET search_path = unc_esq_peliculas;
+
+1) SELECT id_institucion, nombre_institucion FROM institucion WHERE nombre_institucion ILIKE '%fundacion%' LIMIT 10;
+
+2) SELECT id_distribuidor, id_departamento, nombre FROM departamento;
+
+3) SELECT nombre, apellido, telefono FROM empleado WHERE id_tarea='7231' ORDER BY nombre, apellido LIMIT 10;
+
+4) SELECT apellido, id_empleado FROM empleado WHERE porc_comision IS NULL LIMIT 10;
+
+5) SELECT apellido, id_tarea FROM voluntario WHERE id_coordinador IS NULL LIMIT 10;
+
+6) SELECT apellido, id_tarea FROM voluntario WHERE id_coordinador IS NULL LIMIT 10;
+
+7) SELECT apellido, nombre, e_mail FROM empleado WHERE e_mail ILIKE '%gmail.com' AND sueldo > 1000 LIMIT 10;
+
+8) SELECT id_tarea FROM empleado LIMIT 10;
+
+9) SELECT apellido ||' '|| nombre AS "Apellido y nombre", e_mail AS "Dirección de mail" FROM voluntario WHERE telefono LIKE '+51%' LIMIT 10;
+
+ ---- Hechos de gusto
+SELECT EXTRACT(day FROM fecha_nacimiento) || '-' || EXTRACT(month FROM fecha_nacimiento) AS "Cumpleaños", COUNT(*) AS "Empleados con mismo cumpleaños" FROM empleado GROUP BY EXTRACT(day FROM fecha_nacimiento), EXTRACT(month FROM fecha_nacimiento) ORDER BY EXTRACT(month FROM fecha_nacimiento), EXTRACT(day FROM fecha_nacimiento) LIMIT 24;
+
+Este trae todas las fechas de cumpleaños, las ordena y cuenta cuantos empleados cumplen en esa fecha. El problema es que primero cuenta cuantos empleados cumplen en esa fecha y luego los limita a los primeros cumpleaños ordenados (lo que da resultados como 1-1 200 o 3-1 99.
+
+SELECT COUNT(*) AS "Cantidad de Cumpleaños",
+       "Cumpleaños"
+FROM (
+    SELECT EXTRACT(day FROM fecha_nacimiento) || '-' || EXTRACT(month FROM fecha_nacimiento) AS "Cumpleaños"
+    FROM empleado
+    ORDER BY EXTRACT(month FROM fecha_nacimiento), EXTRACT(day FROM fecha_nacimiento)
+    LIMIT 200
+) AS subconsulta
+GROUP BY "Cumpleaños";
+
+Esta otra consulta anidada trae los primeros, y de esos 200 evalua los que cumplen en misma fecha y los agrupa. Lo que da como resultado por ej: 1-1 99, 2-1 101
+
+ ----
+
+10)  SELECT apellido ||','|| nombre AS "Apellido, Nombre", EXTRACT(day FROM fecha_nacimiento) ||'-'|| EXTRACT(month FROM fecha_nacimiento) AS "Cumpleaños" FROM empleado ORDER BY EXTRACT(day FROM fecha_nacimiento), EXTRACT(month FROM fecha_nacimiento) LIMIT 200;

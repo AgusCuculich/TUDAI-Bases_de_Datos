@@ -1,0 +1,54 @@
+1) Utiliza el exist para evaluar si existe o no la pelicula cuyo codigo este en la tabla pelicula y renglon_entrega, tambien evalua si existe el num de entrega en ambas tablas y al mismo tiempo es del año 2006, etc. Esto trae como resultado un v o f, lo que viene joya ya que la subconsulta solo trae un resultado (de aqui que haya que usar el exists porque sino traeria todas las cosas que coinciden). En el caso del in, que se utiliza como or
+
+SELECT p.codigo_pelicula AS "codigo", p.titulo, p.idioma FROM pelicula p WHERE
+(idioma = 'Inglés' AND EXISTS (SELECT 1 FROM renglon_entrega r WHERE p.codigo_pelicula = r.codigo_pelicula AND
+EXISTS (SELECT 2 FROM entrega e WHERE r.nro_entrega = e.nro_entrega AND EXTRACT(YEAR FROM fecha_entrega) = 2006))) LIMIT 200;
+
+2) Aqui la primer opcion esta hecha con subconsultas mientras la segunda esta hecha con ensambles con join. Ademas la primera para chusmear con cuantas cantidades de peliculas distribuidas por un nacional en 2006, se realizo una agrupacion (para ver cuantos distribuyeron 1, 4, 200, etc) y en base a eso contarlas.
+
+SELECT r.cantidad, count(cantidad) as "total" FROM renglon_entrega r INNER JOIN entrega e ON r.nro_entrega = e.nro_entrega
+WHERE (EXTRACT(YEAR FROM fecha_entrega) = '2006' AND EXISTS(SELECT 1 FROM distribuidor d
+WHERE (e.id_distribuidor = d.id_distribuidor AND EXISTS(SELECT 2 FROM nacional n
+WHERE d.id_distribuidor = n.id_distribuidor)))) GROUP BY r.cantidad LIMIT 200;
+
+SELECT r.cantidad
+FROM renglon_entrega r
+INNER JOIN entrega e ON r.nro_entrega = e.nro_entrega
+INNER JOIN distribuidor d ON e.id_distribuidor = d.id_distribuidor
+INNER JOIN nacional n ON d.id_distribuidor = n.id_distribuidor
+WHERE EXTRACT(YEAR FROM e.fecha_entrega) = 2006
+LIMIT 200;
+
+Otra manera aun más clean de realizarlo 
+SELECT r.cantidad
+FROM renglon_entrega r
+INNER JOIN entrega e ON r.nro_entrega = e.nro_entrega
+INNER JOIN distribuidor d ON e.id_distribuidor = d.id_distribuidor
+WHERE (EXTRACT(YEAR FROM e.fecha_entrega) = 2006 AND d.tipo = 'N')
+LIMIT 200;
+
+1.3) Departamento que no tenga empleado cuya diferencia entre sueldo min y max sea menor al 40% del sueldo max.
+
+SELECT d.nombre FROM departamento d
+WHERE EXISTS(SELECT 1 FROM empleado e
+WHERE d.id_departamento = e.id_departamento AND EXISTS(SELECT 2 FROM tarea t
+WHERE e.id_tarea = t.id_tarea AND (t.sueldo_maximo - t.sueldo_minimo) < (t.sueldo_maximo * 0.4)));
+
+SELECT d.nombre FROM departamento d
+JOIN empleado e ON d.id_departamento = e.id_departamento
+JOIN tarea t ON e.id_tarea = t.id_tarea
+WHERE ((t.sueldo_maximo - t.sueldo_minimo) < (t.sueldo_maximo * 0.4));
+
+1.4)
+//12387
+
+SELECT DISTINCT p.titulo from pelicula p
+JOIN renglon_entrega r ON p.codigo_pelicula = r.codigo_pelicula
+JOIN entrega e ON r.nro_entrega = e.nro_entrega
+JOIN distribuidor d ON e.id_distribuidor = d.id_distribuidor
+WHERE d.tipo NOT IN ('N');
+
+1.5) Determinar los jefes que poseen personal a cargo y cuyos departamentos (los del jefe) se encuentren en la Argentina.
+
+
+
