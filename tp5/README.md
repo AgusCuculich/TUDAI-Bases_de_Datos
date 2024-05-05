@@ -55,6 +55,48 @@ CREATE TABLE [IF NOT EXISTS] example (
 [Alter-Table(PostgreSQL16](https://www.postgresql.org/docs/16/sql-altertable.html)
 
 <h4>Foreign Keys</h4>
+A foreign key constraint specifies that the values in a column (or a group of columns) must match the values appearing in some row of another table. We say this maintains the referential integrity between two related tables.
+
+```SQL
+CREATE TABLE products (
+    product_no integer PRIMARY KEY,
+    name text,
+    price numeric
+);
+
+CREATE TABLE orders (
+    order_id integer PRIMARY KEY,
+    shipping_address text,
+    ...
+);
+
+CREATE TABLE order_items (
+    product_no integer REFERENCES products,
+    order_id integer REFERENCES orders,
+    quantity integer,
+    PRIMARY KEY (product_no, order_id)
+);
+```
+A foreign key can also constrain and reference a group of columns. As usual, it then needs to be written in table constraint form. (Of course, the number and type of the constrained columns need to match the number and type of the referenced columns).
+
+```SQL
+CREATE TABLE t1 (
+  a integer PRIMARY KEY,
+  b integer,
+  c integer,
+  FOREIGN KEY (b, c) REFERENCES other_table (c1, c2)
+);
+```
+self-referential foreign key
+
+```SQL
+CREATE TABLE tree (
+    node_id integer PRIMARY KEY,
+    parent_id integer REFERENCES tree,
+    name text,
+    ...
+);
+```
 
 [Constraints](https://www.postgresql.org/docs/16/ddl-constraints.html#DDL-CONSTRAINTS-FK)
 
@@ -62,14 +104,40 @@ CREATE TABLE [IF NOT EXISTS] example (
 
 Rechazo de la operación
 
-* **NO ACTION**: no permite borrar/modificar un registro cuya clave primaria está siendo referenciada.
-* **RESTRICT**: misma semántica que NO ACTION, pero se chequea antes de las otras RI.
+* **NO ACTION**: prevents deletion/update of a referenced row.
+* **RESTRICT**: if any referencing rows still exist when the constraint is checked, an error is raised; this is the default behavior if you do not specify anything.
 
 Acepta op y realiza acciones reparadoras
 
-* **CASCADE**: se propaga el borrado/ la modificación a todos los registros que referencian a dicha clave primaria.
-* **SET NULL**: coloca nulos en la FK de aquellos registros que referencian a dicha clave primaria.
+* **CASCADE**: when a referenced row is deleted/updated, row(s) referencing it should be automatically deleted/updated as well.
+* **SET NULL**: These cause the referencing column(s) in the referencing row(s) to be set to nulls or their default values
 * **SET DEFAULT**: coloca el valor por defecto en la FK a aquellos registros que referencian a dicha clave primaria.
+
+> [!TIP]
+> The essential difference between these two choices is that NO ACTION allows the check to be deferred until later in the transaction whereas RESTRICT does not.
+> When the referencing table represents something that is a component of what is represented by the referenced table and cannot exist independently, then CASCADE could be appropriate.
+> If the two tables represent independent objects, then RESTRICT or NO ACTION is more appropriate.
+> The actions SET NULL or SET DEFAULT can be appropriate if a foreign-key relationship represents optional information.
+
+```SQL
+CREATE TABLE tenants (
+    tenant_id integer PRIMARY KEY
+);
+
+CREATE TABLE users (
+    tenant_id integer REFERENCES tenants ON DELETE CASCADE,
+    user_id integer NOT NULL,
+    PRIMARY KEY (tenant_id, user_id)
+);
+
+CREATE TABLE posts (
+    tenant_id integer REFERENCES tenants ON DELETE CASCADE,
+    post_id integer NOT NULL,
+    author_id integer,
+    PRIMARY KEY (tenant_id, post_id),
+    FOREIGN KEY (tenant_id, author_id) REFERENCES users ON DELETE SET NULL (author_id)
+);
+```
 
 <h4>Tipos de matching</h4>
 
@@ -77,7 +145,7 @@ Acepta op y realiza acciones reparadoras
 
 * **MATCH SIMPLE**: allows any of the foreign key columns to be null; if any of them are null, the row is not required to have a match in the referenced table.
 
-* **MATCH PARTIAL**: no implementando. (Todos los que no sean NULL deben hacer referencia a algo que exista)
+* **MATCH PARTIAL**: no implementando.
 
 [Crate-Table(PostgreSQL16)](https://www.postgresql.org/docs/16/sql-createtable.html)
 
