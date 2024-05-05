@@ -36,3 +36,85 @@ a)
 
 b) Ninguna de las respuestas. La consulta no se podrá llevar a cabo por la restricción de tipo RESTRICT para las operaciones ON UPDATE establecidas en las claves referenciadas de ambas tablas.
 
+c) AUSPICIO_EMPLEADO
+<table>
+    <thead>
+        <tr>
+            <th>Inciso</th>
+            <th>Match Simple</th>
+            <th>Match Full</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>a</th>
+            <th>:heavy_check_mark:</th>
+            <th>:x:</th>
+        </tr>
+        <tr>
+            <th>b</th>
+            <th>:heavy_check_mark:</th>
+            <th>:heavy_check_mark:</th>
+        </tr>
+        <tr>
+            <th>c</th>
+            <th>:heavy_check_mark:</th>
+            <th>:heavy_check_mark:</th>
+        </tr>
+        <tr>
+            <th>d</th>
+            <th>:heavy_check_mark:</th>
+            <th>:x:</th>
+        </tr>
+    </tbody>
+</table>
+
+AUSPICIO_PROYECTO
+<table>
+    <thead>
+        <tr>
+            <th>Inciso</th>
+            <th>Match Simple</th>
+            <th>Match Full</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>a</th>
+            <th>:heavy_check_mark:</th>
+            <th>:heavy_check_mark:</th>
+        </tr>
+        <tr>
+            <th>b</th>
+            <th>:heavy_check_mark:</th>
+            <th>:heavy_check_mark:</th>
+        </tr>
+        <tr>
+            <th>c</th>
+            <th>:heavy_check_mark:</th>
+            <th>:heavy_check_mark:</th>
+        </tr>
+        <tr>
+            <th>d</th>
+            <th>:heavy_check_mark:</th>
+            <th>:heavy_check_mark:</th>
+        </tr>
+    </tbody>
+</table>
+
+Ejercicio 3
+
+a) Sí, en una tabla puedes definir diferentes acciones de referencia para las relaciones de clave externa (RIR) que apuntan a la misma tabla, siempre y cuando las restricciones sean coherentes y no entren en conflicto con la integridad referencial de la base de datos.
+
+```SQL
+-- Tabla Ruta
+CREATE TABLE Ruta (
+    ruta_id integer PRIMARY KEY,
+    ciudad_desde_id integer,
+    ciudad_hasta_id integer,
+    FOREIGN KEY (ciudad_desde_id) REFERENCES Ciudad(ciudad_id) ON DELETE CASCADE,
+    FOREIGN KEY (ciudad_hasta_id) REFERENCES Ciudad(ciudad_id) ON DELETE RESTRICT
+);
+```
+
+b) No es posible porque la columna nro_carretera (FK) de la tabla RUTA no permite valores NULL.

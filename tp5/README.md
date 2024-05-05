@@ -107,6 +107,8 @@ Rechazo de la operación
 * **NO ACTION**: prevents deletion/update of a referenced row.
 * **RESTRICT**: if any referencing rows still exist when the constraint is checked, an error is raised; this is the default behavior if you do not specify anything.
 
+> The essential difference between these two choices is that NO ACTION allows the check to be deferred until later in the transaction whereas RESTRICT does not.
+
 Acepta op y realiza acciones reparadoras
 
 * **CASCADE**: when a referenced row is deleted/updated, row(s) referencing it should be automatically deleted/updated as well.
@@ -114,9 +116,12 @@ Acepta op y realiza acciones reparadoras
 * **SET DEFAULT**: coloca el valor por defecto en la FK a aquellos registros que referencian a dicha clave primaria.
 
 > [!TIP]
-> The essential difference between these two choices is that NO ACTION allows the check to be deferred until later in the transaction whereas RESTRICT does not.
 > When the referencing table represents something that is a component of what is represented by the referenced table and cannot exist independently, then CASCADE could be appropriate.
+
+> [!TIP]
 > If the two tables represent independent objects, then RESTRICT or NO ACTION is more appropriate.
+
+> [!TIP]
 > The actions SET NULL or SET DEFAULT can be appropriate if a foreign-key relationship represents optional information.
 
 ```SQL
@@ -141,13 +146,39 @@ CREATE TABLE posts (
 
 <h4>Tipos de matching</h4>
 
-* **MATCH FULL**: will not allow one column of a multicolumn foreign key to be null unless all foreign key columns are null; if they are all null, the row is not required to have a match in the referenced table.
+* **Datos válidos en todas las columnas:** Si todas las columnas que forman la clave externa tienen valores no nulos, el DBMS buscará una fila correspondiente en la tabla referenciada.
+* **NULL en al menos una columna:** cuando al menos una columna de la clave externa es NULL, se considera que no hay un "match" entre las filas de las tablas relacionadas, lo que permite la operación sin violar la integridad referencial de la base de datos.
+* **Todos los valores NULL:** Si todas las columnas de la clave externa son NULL, también se permitirá la operación por la misma razón mencionada anteriormente.
 
-* **MATCH SIMPLE**: allows any of the foreign key columns to be null; if any of them are null, the row is not required to have a match in the referenced table.
+<table>
+    <thead>
+        <tr>
+            <th>Casos</th>
+            <th>Match Simple</th>
+            <th>Match Full</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>Datos válidos en todas las columnas</th>
+            <th>:heavy_check_mark:</th>
+            <th>:heavy_check_mark:</th>
+        </tr>
+        <tr>
+            <th>NULL en al menos una columna</th>
+            <th>:heavy_check_mark:</th>
+            <th>:x:</th>
+        </tr>
+        <tr>
+            <th>Todos los valores NULL</th>
+            <th>:heavy_check_mark:</th>
+            <th>:heavy_check_mark:</th>
+        </tr>
+    </tbody>
+</table>
 
-* **MATCH PARTIAL**: no implementando.
-
-[Crate-Table(PostgreSQL16)](https://www.postgresql.org/docs/16/sql-createtable.html)
+> [!CAUTION]
+> MATCH PARTIAL is not yet implemented.
 
 ```SQL
 CREATE TABLE NombreTabla ( ...
@@ -158,3 +189,4 @@ CREATE TABLE NombreTabla ( ...
     [ON DELETE AccionRef] ] ...
 );
 ```
+[Crate-Table(PostgreSQL16)](https://www.postgresql.org/docs/16/sql-createtable.html)
