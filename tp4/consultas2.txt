@@ -40,7 +40,7 @@ JOIN tarea t ON e.id_tarea = t.id_tarea
 WHERE ((t.sueldo_maximo - t.sueldo_minimo) < (t.sueldo_maximo * 0.4));
 
 1.4)
-//12387
+//12387 filas
 
 SELECT DISTINCT p.titulo from pelicula p
 JOIN renglon_entrega r ON p.codigo_pelicula = r.codigo_pelicula
@@ -49,6 +49,76 @@ JOIN distribuidor d ON e.id_distribuidor = d.id_distribuidor
 WHERE d.tipo NOT IN ('N');
 
 1.5) Determinar los jefes que poseen personal a cargo y cuyos departamentos (los del jefe) se encuentren en la Argentina.
+//6 filas
+
+SELECT d.jefe_departamento
+FROM departamento d
+WHERE EXISTS (
+    SELECT 1
+    FROM empleado e
+    WHERE e.id_jefe IS NOT NULL
+    GROUP BY e.id_jefe
+    HAVING COUNT(e.id_empleado) > 1
+)
+AND EXISTS (
+    SELECT 2
+    FROM ciudad c
+    WHERE c.id_ciudad = d.id_ciudad AND c.id_pais = 'AR'
+);
+
+1.6) Liste el apellido y nombre de los empleados que pertenecen a aquellos departamentos de Argentina y donde el jefe de departamento posee una comisión de más del 10% de la que posee su empleado a cargo.
+//36 filas
+
+SELECT e.nombre, e.apellido
+FROM empleado e
+WHERE e.porc_comision < (
+        SELECT e2.porc_comision * 0.1
+        FROM empleado e2
+        WHERE e2.id_empleado = e.id_jefe
+    )
+    AND EXISTS (
+        SELECT d.id_departamento
+        FROM departamento d
+        WHERE e.id_departamento = d.id_departamento
+        AND EXISTS (
+            SELECT *
+            FROM ciudad c
+            WHERE d.id_ciudad = c.id_ciudad
+            AND c.id_pais = 'AR'
+        )
+    );
+
+1.7) Indicar la cantidad de películas entregadas a partir del 2010, por género.
+
+SELECT COUNT(p.codigo_pelicula), p.genero
+FROM pelicula p
+JOIN renglon_entrega r ON p.codigo_pelicula = r.codigo_pelicula
+JOIN entrega e ON e.nro_entrega = r.nro_entrega
+WHERE extract(YEAR FROM e.fecha_entrega) > 2010
+GROUP BY p.genero;
+
+/*SELECT COUNT(p.codigo_pelicula) FROM pelicula p
+JOIN renglon_entrega r ON p.codigo_pelicula = r.codigo_pelicula
+WHERE p.codigo_pelicula IN
+      (SELECT e.nro_entrega FROM entrega e
+        WHERE ((e.nro_entrega = r.nro_entrega) AND (extract(YEAR FROM e.fecha_entrega) > 2010))
+      )
+GROUP BY genero;*/
 
 
+1.8) Realizar un resumen de entregas por día, indicando el video club al cual se le realizó la entrega y la cantidad entregada. Ordenar el resultado por fecha.
 
+
+1.9) Listar, para cada ciudad, el nombre de la ciudad y la cantidad de empleados mayores de edad que desempeñan tareas en departamentos de la misma y que posean al menos 30 empleados.
+
+* Si se usa un WHERE IN y la subconsulta tiene un group by, la columna por la que se esta queriendo agrupar debe esta presente en el select de la subconsulta.
+
+SELECT c.id_ciudad, c.nombre_ciudad, COUNT(*) AS cantidad_empleados
+FROM ciudad c
+JOIN departamento d ON c.id_ciudad = d.id_ciudad
+JOIN empleado e ON d.id_departamento = e.id_departamento
+WHERE EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM e.fecha_nacimiento) >= 18
+    AND e.id_tarea IS NOT NULL
+GROUP BY c.id_ciudad, c.nombre_ciudad
+HAVING COUNT(*) > 30
+ORDER BY c.id_ciudad;
