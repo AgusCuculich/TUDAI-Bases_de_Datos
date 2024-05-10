@@ -113,7 +113,7 @@ Acepta op y realiza acciones reparadoras
 
 * **CASCADE**: when a referenced row is deleted/updated, row(s) referencing it should be automatically deleted/updated as well.
 * **SET NULL**: These cause the referencing column(s) in the referencing row(s) to be set to nulls or their default values
-* **SET DEFAULT**: coloca el valor por defecto en la FK a aquellos registros que referencian a dicha clave primaria.
+* **SET DEFAULT**: coloca un valor por defecto a aquellos registros que referencian a dicha clave primaria.
 
 > [!TIP]
 > When the referencing table represents something that is a component of what is represented by the referenced table and cannot exist independently, then CASCADE could be appropriate.
@@ -190,3 +190,95 @@ CREATE TABLE NombreTabla ( ...
 );
 ```
 [Crate-Table(PostgreSQL16)](https://www.postgresql.org/docs/16/sql-createtable.html)
+
+<h4>Otras RI en SQL</h4>
+
+1. **Dominio**
+Domains are useful for abstracting common constraints on fields into a single location for maintenance. For example, several tables might contain email address columns, all requiring the same CHECK constraint to verify the address syntax. Define a domain rather than setting up each table's constraint individually.
+
+    * Casos particulares: NOT NULL, DEFAULT, PRIMARY KEY, UNIQUE.
+    * Ámbito de la restricción: atributo.
+
+```SQL
+CREATE DOMAIN NomDominio
+AS TipoDato [ DEFAULT ValorDefecto ]
+[CONSTRAINT NomRestriccion] CHECK (condición);
+```
+
+> [!NOTE]
+> CHECK clauses specify integrity constraints or tests which values of the domain must satisfy. Each constraint must be an expression producing a Boolean result. It should use the key word VALUE to refer to the value being tested. Expressions evaluating to TRUE or UNKNOWN succeed.
+> * Currently, CHECK expressions cannot contain subqueries nor refer to variables other than VALUE.
+> * When a domain has multiple CHECK constraints, they will be tested in alphabetical order by name.
+
+Pueden plantearse distintos tipos de condiciones:
+
+    * Comparación simple: operadores (=,<,>,<=,>=,<>) Ej:Sueldo > 0
+    * Rango: [NOT] BETWEEN (incluye extremos) Ej: nota BETWEEN 0 AND 10
+    * Pertenencia: [NOT] IN Ej: Area IN (‘Académica’, ‘Posgrado’, ‘Extensión’)
+    * Semejanza de Patrones: [NOT] LIKE % (para 0 o más caracteres) Ej: LIKE ‘s%’ - (para un carácter simple) Ej: LIKE ‘s_’
+
+2. CHECK 
+It allows you to specify that the value in a certain column must satisfy a Boolean (truth-value) expression. For instance, to require positive product prices, you could use:
+
+<table>
+    <tbody>
+<td><pre lang="sql">
+        CREATE TABLE products (
+        product_no integer,
+        name text,
+        price numeric CHECK (price > 0),
+        discounted_price numeric CHECK (discounted_price > 0),
+        CHECK (price > discounted_price)
+        );
+</pre></td>
+<td><pre lang="sql">
+    CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric CHECK (price > 0),
+    discounted_price numeric,
+    CHECK (discounted_price > 0 AND price > discounted_price)
+    );
+</pre></td>
+    </tbody>
+</table>
+
+<table>
+    <thead>
+        <tr>
+            <th>CHECK de tupla</th>
+            <th>CHECK de tabla</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Representa una restricción específica sobre los valores que puede tomar una combinación de atributos en una tupla.</td>
+            <td>Representa una restricción que afecta diferentes tuplas de una misma tabla.</td>
+        </tr>
+        <tr>
+            <td>Ámbito de la restricción: tupla (la RI se comprueba para cada fila que se inserta o actualiza en la tabla).</td>
+            <td>Ámbito de la restricción: tabla.</td>
+        </tr>
+    </tbody>
+</table>
+
+> [!CAUTION]
+> La gran mayoría de los DBMS comerciales no soportan los check de tabla!
+
+3. ASSERTIONS (RI globales)
+Permiten definir restricciones sobre un número arbitrario de atributos o un número arbitrario de tablas. Su activación se daría ante actualizaciones sobre las tablas involucradas.
+
+```SQL
+CREATE ASSERTION salario_valido
+CHECK ( NOT EXISTS ( SELECT 1 FROM Empleado E, Empleado G, Area A
+WHERE E.sueldo > G.sueldo
+AND E.AreaT = A.IdArea
+AND G.IdE = A.gerente ) );
+```
+
+> [!IMPORTANT]
+> SQL no proporciona un mecanismo para expresar la condición «para todo X, P(X)»
+> (P=predicado) → se debe utilizar su equivalente «no existe X tal que no P(X)»
+
+> [!CAUTION]
+> Los DBMS comerciales no soportan ASSERTIONS!
