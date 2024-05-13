@@ -193,7 +193,66 @@ CREATE TABLE NombreTabla ( ...
 
 <h4>Otras RI en SQL</h4>
 
-1. **Dominio**
+1. **CHECK**
+
+It allows you to specify that the value in a certain column must satisfy a Boolean (truth-value) expression. Expressions evaluating to TRUE or UNKNOWN succeed.
+
+Pueden plantearse distintos tipos de condiciones:
+
+* **Comparación simple:** operadores (=,<,>,<=,>=,<>) Ej:Sueldo > 0
+* **Rango:** [NOT] BETWEEN (incluye extremos) Ej: nota BETWEEN 0 AND 10
+* **Pertenencia:** [NOT] IN Ej: Area IN (‘Académica’, ‘Posgrado’, ‘Extensión’)
+* **Semejanza de Patrones:** [NOT] LIKE % (para 0 o más caracteres) Ej: LIKE ‘s%’ - (para un carácter simple) Ej: LIKE ‘s_’
+
+> [!IMPORTANT]
+> Currently, CHECK expressions cannot contain subqueries nor refer to variables other than VALUE.
+
+<table>
+    <thead>
+        <tr>
+            <th></th>
+            <th>CHECK de tupla</th>
+            <th>CHECK de tabla</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Una fila específica viola una condición</td>
+            <td>Solo esa operación de inserción o actualización es rechazada, y las demás filas que cumplen con la condición se insertan o actualizan sin problemas.</td>
+            <td>Se rechaza la operación completa de inserción o actualización, y ninguna fila se modifica en la tabla.</td>
+        </tr>
+        <tr>
+            <td>Ámbito de la restricción</td>
+            <td>Tupla</td>
+            <td>Tabla</td>
+        </tr>
+        <tr>
+            <td>Ejemplo</td>
+            <td><pre lang="sql">
+ALTER TABLE AREA
+    ADD CONSTRAINT ck_control_area
+    CHECK ( ( (tipo_area = ‘BC’) 
+    AND (id_area BETWEEN (3 AND 7) ) 
+    OR
+    tipo_area <> ‘BC’) );
+            </pre></td>
+            <td><pre lang="sql">
+ALTER TABLE Empleado
+    ADD CONSTRAINT ck_area_max
+    CHECK ( NOT EXISTS (SELECT 1
+                        FROM Empleado
+                        GROUP BY tipo_area, id_area
+                        HAVING count(*) > 30));
+            </pre></td>
+        </tr>
+    </tbody>
+</table>
+
+> [!CAUTION]
+> La gran mayoría de los DBMS comerciales no soportan los check de tabla!
+
+2. **Dominio**
+
 Domains are useful for abstracting common constraints on fields into a single location for maintenance. For example, several tables might contain email address columns, all requiring the same CHECK constraint to verify the address syntax. Define a domain rather than setting up each table's constraint individually.
 
     * Casos particulares: NOT NULL, DEFAULT, PRIMARY KEY, UNIQUE.
@@ -206,79 +265,32 @@ AS TipoDato [ DEFAULT ValorDefecto ]
 ```
 
 > [!NOTE]
-> CHECK clauses specify integrity constraints or tests which values of the domain must satisfy. Each constraint must be an expression producing a Boolean result. It should use the key word VALUE to refer to the value being tested. Expressions evaluating to TRUE or UNKNOWN succeed.
-> * Currently, CHECK expressions cannot contain subqueries nor refer to variables other than VALUE.
-> * When a domain has multiple CHECK constraints, they will be tested in alphabetical order by name.
+> When a domain has multiple CHECK constraints, they will be tested in alphabetical order by name.
 
-Pueden plantearse distintos tipos de condiciones:
+3. **ASSERTIONS (RI globales)**
 
-    * Comparación simple: operadores (=,<,>,<=,>=,<>) Ej:Sueldo > 0
-    * Rango: [NOT] BETWEEN (incluye extremos) Ej: nota BETWEEN 0 AND 10
-    * Pertenencia: [NOT] IN Ej: Area IN (‘Académica’, ‘Posgrado’, ‘Extensión’)
-    * Semejanza de Patrones: [NOT] LIKE % (para 0 o más caracteres) Ej: LIKE ‘s%’ - (para un carácter simple) Ej: LIKE ‘s_’
-
-2. CHECK 
-It allows you to specify that the value in a certain column must satisfy a Boolean (truth-value) expression. For instance, to require positive product prices, you could use:
-
-<table>
-    <tbody>
-<td><pre lang="sql">
-        CREATE TABLE products (
-        product_no integer,
-        name text,
-        price numeric CHECK (price > 0),
-        discounted_price numeric CHECK (discounted_price > 0),
-        CHECK (price > discounted_price)
-        );
-</pre></td>
-<td><pre lang="sql">
-    CREATE TABLE products (
-    product_no integer,
-    name text,
-    price numeric CHECK (price > 0),
-    discounted_price numeric,
-    CHECK (discounted_price > 0 AND price > discounted_price)
-    );
-</pre></td>
-    </tbody>
-</table>
-
-<table>
-    <thead>
-        <tr>
-            <th>CHECK de tupla</th>
-            <th>CHECK de tabla</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Representa una restricción específica sobre los valores que puede tomar una combinación de atributos en una tupla.</td>
-            <td>Representa una restricción que afecta diferentes tuplas de una misma tabla.</td>
-        </tr>
-        <tr>
-            <td>Ámbito de la restricción: tupla (la RI se comprueba para cada fila que se inserta o actualiza en la tabla).</td>
-            <td>Ámbito de la restricción: tabla.</td>
-        </tr>
-    </tbody>
-</table>
-
-> [!CAUTION]
-> La gran mayoría de los DBMS comerciales no soportan los check de tabla!
-
-3. ASSERTIONS (RI globales)
-Permiten definir restricciones sobre un número arbitrario de atributos o un número arbitrario de tablas. Su activación se daría ante actualizaciones sobre las tablas involucradas.
+Una "assertion" puede aplicarse a un conjunto arbitrario de atributos o incluso a múltiples tablas. Su activación ocurre cuando se realizan operaciones de actualización en las tablas involucradas en la definición de la "assertion". Si la afirmación resulta ser falsa, el programa puede generar una advertencia, error o realizar alguna acción definida por el programador para manejar la situación.
 
 ```SQL
 CREATE ASSERTION salario_valido
-CHECK ( NOT EXISTS ( SELECT 1 FROM Empleado E, Empleado G, Area A
-WHERE E.sueldo > G.sueldo
-AND E.AreaT = A.IdArea
-AND G.IdE = A.gerente ) );
+    CHECK ( NOT EXISTS ( SELECT 1 FROM Empleado E, Empleado G, Area A
+    WHERE E.sueldo > G.sueldo
+    AND E.AreaT = A.IdArea
+    AND G.IdE = A.gerente ) );
 ```
 
 > [!IMPORTANT]
 > SQL no proporciona un mecanismo para expresar la condición «para todo X, P(X)»
 > (P=predicado) → se debe utilizar su equivalente «no existe X tal que no P(X)»
+> **Ejemplo:** Supongamos que tenemos una tabla llamada "empleados", y queremos asegurarnos de que ningún empleado tenga un salario inferior a \$2000 (es decir, que "todos los empleados tienen un salario superior a \$2000"). Podríamos expresar esto usando la afirmación "no existe un empleado cuyo salario sea inferior a \$2000".
+
+```SQL
+CREATE ASSERTION salario_minimo
+CHECK (NOT EXISTS(
+    SELECT 1 FROM empleados
+    WHERE salario < 2000
+));
+```
 
 > [!CAUTION]
 > Los DBMS comerciales no soportan ASSERTIONS!
