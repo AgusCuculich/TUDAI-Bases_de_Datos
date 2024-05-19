@@ -71,3 +71,30 @@ INSERT INTO contiene (id_articulo, idioma, cod_palabra) VALUES
 (3, 'es', 3),
 (3, 'es', 4);
 ```
+
+```SQL
+-- Añadidos extras
+INSERT INTO articulo (id_articulo, titulo, autor, nacionalidad, fecha_publicacion) VALUES
+(4, 'Cien años de soledad', 'Gabriel García Márquez', 'Colombia', '1967-01-01');
+
+INSERT INTO articulo (id_articulo, titulo, autor, nacionalidad, fecha_publicacion) VALUES
+(5, 'Orgullo y prejuicio', 'Jane Austen', 'Reino Unido', '1813-01-01');
+
+INSERT INTO articulo (id_articulo, titulo, autor, nacionalidad, fecha_publicacion) VALUES
+(6, 'Crimen y castigo', 'Fyodor Dostoevsky', 'Rusia', '1866-01-01');
+
+INSERT INTO contiene (id_articulo, idioma, cod_palabra) VALUES (4, 'es', 1);
+INSERT INTO contiene (id_articulo, idioma, cod_palabra) VALUES (5, 'es', 1);
+INSERT INTO contiene (id_articulo, idioma, cod_palabra) VALUES (6, 'es', 1);
+
+INSERT INTO palabra (idioma, cod_palabra, descripcion) VALUES ('fr', 6, 'amour');
+INSERT INTO palabra (idioma, cod_palabra, descripcion) VALUES ('jp', 7, '日本');
+```
+
+```SQL
+--DROPS
+DROP TRIGGER IF EXISTS tr_pl_clave_x_nacionalidad on contiene;
+DROP TRIGGER IF EXISTS tr_pl_clave_x_nacionalidad_articulo on articulo;
+DROP FUNCTION IF EXISTS fn_pl_clave_x_nacionalidad();
+DROP FUNCTION IF EXISTS fn_contador_pl_clave(integer, integer);
+```
