@@ -1,4 +1,4 @@
-Ejercicio 3
+<h2>EJERCICIO 3</h2>
 
 A. Controlar que las nacionalidades sean 'Argentina', 'Español', 'Inglés', 'Alemán' o 'Chilena'.
 
@@ -48,7 +48,7 @@ CREATE ASSERTION palabras_x_nacionalidad
     );
 ```
 
-EJERCICIO 4 
+<h2>EJERCICIO 4</h2>
 
 A. La modalidad de la imagen médica puede tomar los siguientes valores RADIOLOGIA CONVENCIONAL, FLUOROSCOPIA, ESTUDIOS RADIOGRAFICOS CON FLUOROSCOPIA, MAMOGRAFIA, SONOGRAFIA.
 
@@ -126,7 +126,7 @@ CREATE ASSERTION costo_computacional_invalido_fluoroscopia
 ;
 ```
 
-EJERCICIO 5
+<h2>EJERCICIO 5</h2>
 
 A. Los descuentos en las ventas son porcentajes y deben estar entre 0 y 100.
 
