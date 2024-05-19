@@ -4,7 +4,7 @@ A. Controlar que las nacionalidades sean 'Argentina', 'Español', 'Inglés', 'Al
 
 ```SQL
 ALTER TABLE P5P1E1_ARTICULO ADD CONSTRAINT CK_ARTICULO_nacionalidad
-    CHECK (UPPER(nacionalidad) IN ('ARGENTINA', 'ESPAÑOL', 'INGLÉS', 'ALEMÁN', 'CHILENA'))
+    CHECK (nacionalidad IN ('ARGENTINA', 'ESPAÑOL', 'INGLÉS', 'ALEMÁN', 'CHILENA'))
 ;
 ```
 
@@ -27,7 +27,25 @@ ALTER TABLE P5P1E1_CONTIENE ADD CONSTRAINT CK_CONTIENE_palabras_max
 D. Sólo los autores argentinos pueden publicar artículos que contengan más de 10 palabras claves, pero con un tope de 15 palabras, el resto de los autores sólo pueden publicar artículos que contengan hasta 10 palabras claves.
 
 ```SQL
-;
+CREATE ASSERTION palabras_x_nacionalidad
+    CHECK(
+        NOT EXISTS(
+            SELECT 1 FROM p5p2e3_articulo a
+            WHERE a.nacionalidad = 'Argentina' 
+            AND a.id_articulo IN(
+                SELECT c.id_articulo FROM p5p2e3_contiene c
+                GROUP BY a.id_articulo
+                HAVING COUNT(*) > 15
+            )
+            OR
+            a.nacionalidad <> 'Argentina' 
+            AND a.id_articulo IN(
+                SELECT c.id_articulo FROM p5p2e3_contiene c
+                GROUP BY a.id_articulo
+                HAVING COUNT(*) > 10
+            )
+        )
+    );
 ```
 
 EJERCICIO 4 
@@ -36,11 +54,23 @@ A. La modalidad de la imagen médica puede tomar los siguientes valores RADIOLOG
 
 ```SQL
 ALTER TABLE P5P2E4_IMAGEN_MEDICA ADD CONSTRAINT CK_IMAGEN_MEDICA_valores_modalidad
-    CHECK ( UPPER(modalidad) IN ('RADIOLOGIA CONVENCIONAL', 'FLUOROSCOPIA', 'ESTUDIOS RADIOGRAFICOS CON FLUOROSCOPIA', 'MAMOGRAFIA', 'SONOGRAFIA') )
+    CHECK (modalidad IN ('RADIOLOGIA CONVENCIONAL', 'FLUOROSCOPIA', 'ESTUDIOS RADIOGRAFICOS CON FLUOROSCOPIA', 'MAMOGRAFIA', 'SONOGRAFIA'))
 ;
 ```
 
-B. Cada imagen no debe tener más de 5 procesamientos.
+B. Cada imagen de cadapaciente no debe tener más de 5 procesamientos.
+
+```SQL
+ALTER TABLE P5P2E4_PROCESAMIENTO ADD CONSTRAINT CK_cant_procesamientos
+    CHECK (
+        NOT EXISTS(
+            SELECT 1 FROM P5P2E4_PROCESAMIENTO
+            GROUP BY id_paciente, id_imagen
+            HAVING COUNT(*) > 5
+        )
+    )
+;
+```
 
 C. Agregue dos atributos de tipo fecha a las tablas Imagen_medica y Procesamiento, una indica la fecha de la imagen y la otra la fecha de procesamiento de la imagen y controle que la segunda no sea menor que la primera.
 
@@ -54,10 +84,9 @@ ADD COLUMN fecha_procesamiento_img date;
 CREATE ASSERTION control_fechas
     CHECK(
         NOT EXISTS(
-            SELECT 1 FROM P5P2E4_IMAGEN_MEDICA i, P5P2E4_PROCESAMIENTO p
-            WHERE i.id_imagen = p.id_imagen
-            AND
-            i.fecha_img > p.fecha_procesamiento_img
+            SELECT 1 FROM P5P2E4_IMAGEN_MEDICA i
+            JOIN P5P2E4_PROCESAMIENTO p ON i.id_paciente = p.id_paciente AND i.id_imagen = p.id_imagen
+            WHERE i.fecha_img > p.fecha_procesamiento_img
         )
     )
 ;
