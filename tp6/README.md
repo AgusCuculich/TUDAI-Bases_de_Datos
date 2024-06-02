@@ -56,7 +56,7 @@ Consiste en un conjunto de sentencias SQL delimitadas en un bloque BEGIN ... END
 * Puede referirse a valores anteriores y nuevos (OLD y NEW).
 * No pueden incluir sentencias DDL (CREATE, ALTER, DROP). 
 
-La acción del trigger es un <span style="color: #d2a8ff">procedimiento atómico</span>, lo que quiere decir que si cualquier sentencia del cuerpo del trigger falla, la acción completa del trigger se deshace.
+<p>La acción del trigger es un <span style="color: #d2a8ff">procedimiento atómico</span>, lo que quiere decir que si cualquier sentencia del cuerpo del trigger falla, la acción completa del trigger se deshace.</p>
 
 > [!CAUTION]
 > <h4>Ejecución de triggers anidados</h4>
@@ -68,7 +68,9 @@ La acción del trigger es un <span style="color: #d2a8ff">procedimiento atómico
 >
 > Ej: Si la activación de un trigger T1 dispara otro trigger T2: se suspende la ejecución de T1, se ejecuta el trigger anidado T2 y luego se retoma la ejecución de T1.
 
-<img src="../img/triggers_en_cascada.jpg" alt="Activación de triggers en cascada">
+<p align="center">
+  <img src="../img/triggers_en_cascada.jpg" alt="Activación de triggers en cascada" height="200px">
+</p>
 
 <h3>Variables especiales que podemos tener dentro de una función</h3>
 
