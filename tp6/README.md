@@ -1,9 +1,9 @@
 <h1>TRIGGERS (disparadores)</h1>
 
-Son una herramienta útil para escribir assertions, restricciones complejas, acciones específicas de reparación, etc.
+Son una herramienta útil para escribir assertions, restricciones complejas, acciones específicas de reparación, etc. Permitiendo especificar acciones automáticas que debe realizar el DMS cuando ocurran ciertos eventos y condiciones.
 
 <h3>plpgsql</h3>
-Es un lenguaje que permite ejecutar sentencias SQL a través de sentencias impoerativas y funciones (Posibilita realizar los controles que las sentencias declarativas de SQL no pueden). Posee estructuras de control (repetitivas y condicionales), permite definir variables, tipos y estructuras de datos, y <span style="color: BurntOrange">permite crear funciones que sean invocadas en sentencias SQL normales o ejecutadas luego de un evento disparador (trigger).</span>
+<p>Es un lenguaje que permite ejecutar sentencias SQL a través de sentencias impoerativas y funciones (Posibilita realizar los controles que las sentencias declarativas de SQL no pueden). Posee estructuras de control (repetitivas y condicionales), permite definir variables, tipos y estructuras de datos, y <span style="color: BurntOrange">permite crear funciones que sean invocadas en sentencias SQL normales o ejecutadas luego de un evento disparador (trigger).</span></p>
 
 **Las funciones escritas en plpgsql aceptan argumentos y pueden devolver distitos tipos de valores:**
 * **void** cuando no debería devolver ningún valor. Solo está haciendo un proceso.
@@ -96,12 +96,15 @@ FOR nombre IN [ REVERSE ] expresión .. expresión LOOP
 	Sentecias;
 END LOOP;
 
-/* Crea un ciclo que itera sobre un rango de valores enteros.  La variable nombre es definida automáticamente como de tipo integer y existe sólo dentro del ciclo. Las dos expresiones determinan el intervalo de iteración y son evaluadas al entrar.  Por defecto el intervalo comienza en 1, excepto cuando se especifica REVERSE que es -1.*/
+/* Crea un ciclo que itera sobre un rango de valores enteros.  La variable nombre es definida automáticamente como 
+de tipo integer y existe sólo dentro del ciclo. Las dos expresiones determinan el intervalo de iteración y son evaluadas 
+al entrar.  Por defecto el intervalo comienza en 1, excepto cuando se especifica REVERSE que es -1.*/
 ```
 
 <h3>Datazos</h3>
 
 <h4>Caso 1:</h4>
+
 ```SQL
 CREATE TRIGGER tr_comparar_con_fecha_procesamiento
     BEFORE UPDATE OF fecha_img, id_paciente, id_imagen ON IMAGEN_MEDICA
