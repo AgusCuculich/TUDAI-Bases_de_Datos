@@ -1,4 +1,4 @@
-<h4>Subconsulta anidada</h4>
+<h2>Subconsulta anidada</h2>
 Permite traer datos de UN registro sobre los que trabajará una consulta externa.
 
 > [!CAUTION]
@@ -8,9 +8,9 @@ Permite traer datos de UN registro sobre los que trabajará una consulta externa
 SELECT * FROM A WHERE cantidad_a = (SELECT MIN(cantidad_b) FROM B);
 ```
 
-Operadores de comparación:
+<h2>Operadores de comparación:</h2>
 
-<table>
+<table style="margin-left:auto; margin-right:auto;">
     <thead>
         <tr>
             <td>Operador</td>
@@ -45,7 +45,7 @@ Operadores de comparación:
     </tbody>
 </table>
 
-**Operadores de subqueries que permiten el retorno de varios registros**
+<h2>Operadores de subqueries que permiten el retorno de varios registros</h2>
 
 * **[NOT] IN**
 
@@ -82,7 +82,7 @@ SELECT * FROM A WHERE cant_a > ALL (SELECT cant_b FROM B)
 SELECT * FROM A WHERE cant_a > ALL (val1, val2, val3...)
 ```
 
-<h4>Consultas de más de una tabla y subconsulta correlacionada</h4>
+<h2>Consultas de más de una tabla y subconsulta correlacionada</h2>
 La subconsulta se ejecuta repetidamente, una vez por cada fila procesada por la consulta externa, utilizando valores de esa fila para filtrar los resultados de la subconsulta.
 Ej: Selecciona los nombres de los clientes que han realizado más pedidos que el promedio del número de pedidos por cliente.
 
@@ -103,7 +103,7 @@ SELECT * FROM A WHERE EXISTS(SELECT 1 FROM B WHERE x)
 
 > Since the result depends only on whether any rows are returned, and not on the contents of those rows, the output list of the subquery is normally unimportant. A common coding convention is to write all EXISTS tests in the form EXISTS(SELECT 1 WHERE ...).
 
-<h4>Clausulas</h4>
+<h2>Clausulas</h2>
 
 * **DISTINCT**
 Elimina los registros duplicados de los resultados de una consulta.
@@ -144,7 +144,7 @@ SELECT columna1 FROM tabla2;
 > [!CAUTION]
 > Las consultas combinadas (UNION, INTERSECT Y EXCEPT) deben tener el mismo número de columnas y tipos de datos compatibles.
 
-<h4>JOIN</h4>
+<h2>JOIN</h2>
 
 > Todas las operaciones de JOIN se realizan de izquierda a derecha.
 
@@ -208,3 +208,14 @@ SELECT columna1, columna2
 FROM tabla1
 FULL JOIN tabla2 ON tabla1.columna = tabla2.columna;
 ```
+
+Temas faltantes
+- [ ] Funciones de grupo
+- [ ] GROUP BY
+- [ ] ORDER BY
+- [ ] HAVING COUNT en lugar de GROUP BY
+- [ ] LIMIT y OFFSET
+- [ ] LIKE e ILIKE
+- [ ] BETWEEN
+- [ ] AS (renombrar)
+- [ ] Añadir a la tabla de operadores los lógicos y aritméticos
