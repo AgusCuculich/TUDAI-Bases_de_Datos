@@ -1,6 +1,7 @@
 <h1>TRIGGERS (disparadores)</h1>
 
-Son una herramienta útil para escribir assertions, restricciones complejas, acciones específicas de reparación, etc. Permitiendo especificar acciones automáticas que debe realizar el DMS cuando ocurran ciertos eventos y condiciones.
+* Posibilitan definir y forzar reglas de integridad, pero NO son una restricción de integridad. Siendo una herramienta útil para escribir assertions, restricciones complejas, acciones específicas de reparación, etc.
+* Permiten especificar acciones automáticas que debe realizar el DMS cuando ocurran ciertos eventos y condiciones. 
 
 ```SQL
 CREATE TRIGGER nombre 
@@ -9,6 +10,10 @@ CREATE TRIGGER nombre
 [ WHEN (condición) ]                              -- Condición
 EXECUTE PROCEDURE función_específica();           -- Acción
 ```
+
+> [!IMPORTANT]
+> * Un trigger definido para forzar una RI no verifica su cumplimiento para los datos ya almacenados en la BD (una RI declarativa verifica la carga existente en la BD).
+> * Los triggers deberian usarse sólo cuando una RI no puede ser expresada mediante una cláusula declarativa.
 
 <h4>Evento</h4>
 Operaciones que generán cambios sobre la DB y que activan un trigger
@@ -56,11 +61,12 @@ Consiste en un conjunto de sentencias SQL delimitadas en un bloque BEGIN ... END
 * Puede referirse a valores anteriores y nuevos (OLD y NEW).
 * No pueden incluir sentencias DDL (CREATE, ALTER, DROP). 
 
-<p>La acción del trigger es un <span style="color: #d2a8ff">procedimiento atómico</span>, lo que quiere decir que si cualquier sentencia del cuerpo del trigger falla, la acción completa del trigger se deshace.</p>
+La acción del trigger es un procedimiento atómico, lo que quiere decir que si cualquier sentencia del cuerpo del trigger falla, la acción completa del trigger se deshace.
 
 > [!CAUTION]
 > <h4>Ejecución de triggers anidados</h4>
 > Cuando un trigger BEFORE se ejecuta y dentro de él se incluye una operación de modificación de datos (INSERT, UPDATE, DELETE), esta operación puede a su vez activar otros triggers BEFORE.
+>
 >
 > Las acciones de estos triggers anidados van quedando "pendientes" porque todas deben completarse antes de que se realice la operación inicial que las activó.
 >
@@ -87,7 +93,7 @@ Consiste en un conjunto de sentencias SQL delimitadas en un bloque BEGIN ... END
 * **TG_TABLE_NAME (TEXT)**: contiene el nombre de la tabla que disparó el trigger.
 
 <h3>plpgsql</h3>
-Es un lenguaje que permite ejecutar sentencias SQL a través de sentencias impoerativas y funciones (Posibilita realizar los controles que las sentencias declarativas de SQL no pueden). Posee estructuras de control (repetitivas y condicionales), permite definir variables, tipos y estructuras de datos, y <span style="color: #d2a8ff">permite crear funciones que sean invocadas en sentencias SQL normales o ejecutadas luego de un evento disparador (trigger).</span>
+Es un lenguaje que permite ejecutar sentencias SQL a través de sentencias impoerativas y funciones (Posibilita realizar los controles que las sentencias declarativas de SQL no pueden). Posee estructuras de control (repetitivas y condicionales), permite definir variables, tipos y estructuras de datos, y permite crear funciones que sean invocadas en sentencias SQL normales o ejecutadas luego de un evento disparador (trigger).
 
 **Las funciones escritas en plpgsql aceptan argumentos y pueden devolver distitos tipos de valores:**
 * **void** cuando no debería devolver ningún valor. Solo está haciendo un proceso.
@@ -95,7 +101,21 @@ Es un lenguaje que permite ejecutar sentencias SQL a través de sentencias impoe
 * **boolean, text, etc** retorna solo valores.
 * **SET OF schema.table** para retornar varias filas de datos.
 
-Ejemplo con funciones que devuelven tabla
+Estructura de una función
+
+    ```SQL
+        CREATE [OR REPLACE] function nobre_funcion(lista_parametros) RETURNS tipo_retorno AS $$
+            DECLARE
+
+            BEGIN
+                ...
+                RETURN NEW;
+            END $$        
+            LANGUAGE plpgsql;
+    -- RETURN NEW indica que la función de trigger debe devolver la fila (registro) que se está procesando actualmente, posiblemente modificada.
+    ```
+
+Ejemplo de función que devuelve una tabla
 
     ```SQL
     CREATE FUNCTION voluntarioscadax(x integer) RETURNS TABLE(nro_voluntario numeric, apellido varchar, nombre varchar) AS $$
@@ -118,6 +138,8 @@ Ejemplo con funciones que devuelven tabla
             END LOOP;
         END $$ 
     LANGUAGE ‘plpgsql’
+
+    -- RETURN NEXT añade una fila a la salida de la función. En este caso, la fila contiene los valores de nro_voluntario, apellido y nombre.
     ```
 
 ```SQL
