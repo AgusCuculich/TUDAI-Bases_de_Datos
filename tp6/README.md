@@ -101,50 +101,53 @@ Es un lenguaje que permite ejecutar sentencias SQL a través de sentencias impoe
 * **boolean, text, etc** retorna solo valores.
 * **SET OF schema.table** para retornar varias filas de datos.
 
-Estructura de una función
+**Estructura de una función**
 
-    ```SQL
-        CREATE [OR REPLACE] function nobre_funcion(lista_parametros) RETURNS tipo_retorno AS $$
-            DECLARE
+```SQL
+    CREATE [OR REPLACE] function nobre_funcion(lista_parametros) RETURNS tipo_retorno AS $$
+        DECLARE
 
-            BEGIN
-                ...
-                RETURN NEW;
-            END $$        
-            LANGUAGE plpgsql;
-    -- RETURN NEW indica que la función de trigger debe devolver la fila (registro) que se está procesando actualmente, posiblemente modificada.
-    ```
-
-Ejemplo de función que devuelve una tabla
-
-    ```SQL
-    CREATE FUNCTION voluntarioscadax(x integer) RETURNS TABLE(nro_voluntario numeric, apellido varchar, nombre varchar) AS $$
-        DECLARE 
-            var_r record;
-            i int;
         BEGIN
-            i := 0;
-            FOR var_r IN (
-                SELECT v.nro_voluntario, v.apellido, v.nombre FROM unc_esq_voluntario.voluntario v) 
-            LOOP
-                IF (i % x = 0) THEN
-                    nro_voluntario := var_r.nro_voluntario;
-                    apellido := var_r.apellido;
-                    nombre := var_r.nombre;
-                    i := 0;
-                    RETURN NEXT;
-                END IF;
-                i := i + 1;
-            END LOOP;
-        END $$ 
-    LANGUAGE ‘plpgsql’
+            ...
+            RETURN NEW;
+        END $$        
+        LANGUAGE plpgsql;
+-- RETURN NEW indica que la función de trigger debe devolver la fila (registro) que se está procesando actualmente, posiblemente modificada.
+```
 
-    -- RETURN NEXT añade una fila a la salida de la función. En este caso, la fila contiene los valores de nro_voluntario, apellido y nombre.
-    ```
+<details>
+<summary><strong>Ejemplo de función que devuelve una tabla</strong></summary><kbd>
+
+```SQL
+CREATE FUNCTION voluntarioscadax(x integer) RETURNS TABLE(nro_voluntario numeric, apellido varchar, nombre varchar) AS $$
+    DECLARE 
+        var_r record;
+        i int;
+    BEGIN
+        i := 0;
+        FOR var_r IN (
+            SELECT v.nro_voluntario, v.apellido, v.nombre FROM unc_esq_voluntario.voluntario v) 
+        LOOP
+            IF (i % x = 0) THEN
+                nro_voluntario := var_r.nro_voluntario;
+                apellido := var_r.apellido;
+                nombre := var_r.nombre;
+                i := 0;
+                RETURN NEXT;
+            END IF;
+            i := i + 1;
+        END LOOP;
+    END $$ 
+LANGUAGE ‘plpgsql’
+
+-- RETURN NEXT añade una fila a la salida de la función. En este caso, la fila contiene los valores de nro_voluntario, apellido y nombre.
+```
 
 ```SQL
 SELECT * FROM voluntarioscadax(3);
 ```
+
+</kbd></details>
 
 **Asignación**
 
@@ -181,19 +184,19 @@ WHERE nombre_emp = mi_nombre;
 
 ```SQL
 IF boolean-expression THEN
-sentencias;
+    sentencias;
 [ ELSIF boolean-expression THEN
-sentencias;
+    sentencias;]
 [ ELSIF boolean-expression THEN
-sentencias ...;]]
+    sentencias ...;]
 [ ELSE
-sentencias ;]
+    sentencias ;]
 END IF;
 ```
 
 ```SQL
 WHILE expresión LOOP
-	Sentencias;
+    Sentencias;
 END LOOP;
 ```
 
