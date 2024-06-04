@@ -139,6 +139,24 @@ CREATE TRIGGER tr_comparar_con_fecha_procesamiento_update
     EXECUTE FUNCTION fn_comparar_con_fecha_procesamiento();
 ```
 
+> [!IMPORTANT]
+> Si se quisiera asegurar de que luego de añadir la nueva columna (cuando todos los datos de la misma serán NULL) a futuro cuando hagamos una inserción en la tabla, si o si deba ser de un valor válido.
+
+```SQL
+-- 1. Agregar la nueva columna sin la restricción NOT NULL
+ALTER TABLE IMAGEN_MEDICA
+ADD COLUMN fecha_img date;
+
+-- 2. Actualizar los registros existentes con un valor no NULL
+UPDATE IMAGEN_MEDICA
+SET fecha_img = CURRENT_DATE
+WHERE fecha_img IS NULL;
+
+-- 3. Agregar la restricción NOT NULL a la columna
+ALTER TABLE IMAGEN_MEDICA
+ALTER COLUMN fecha_img SET NOT NULL;
+```
+
 4) D) Cada paciente sólo puede realizar dos FLUOROSCOPIA anuales.
 
 ```SQL
@@ -166,9 +184,37 @@ CREATE OR REPLACE FUNCTION calcular_fluoroscopias_anuales() RETURNS trigger AS $
 4) E) No se pueden aplicar algoritmos de costo computacional “O(n)” a imágenes de FLUOROSCOPIA.
 
 ```SQL
+    CREATE OR REPLACE FUNCTION fn_costo_computacional_invalido_para_fluoroscopia_PROCESAMIENTO() RETURNS TRIGGER AS $$
+    DECLARE
+        var_modalidad imagen_medica.modalidad%type;
+        var_costo_computacional algoritmo.costo_computacional%type;
+    BEGIN
+        IF EXISTS(
+            SELECT 1 FROM IMAGEN_MEDICA i
+            WHERE NEW.id_paciente = i.id_paciente
+            AND NEW.id_imagen = i.id_imagen
+            AND i.modalidad ILIKE 'FLUOROSCOPIA'
+        ) THEN
+            IF EXISTS (
+                SELECT 2 FROM ALGORITMO a
+                WHERE NEW.id_algoritmo = a.id_algoritmo
+                AND a.costo_computacional ILIKE 'O(n)'
+            ) THEN
+                RAISE EXCEPTION 'No se pueden aplicar algoritmos de costo computacional "O(n)" a imágenes de FLUOROSCOPIA';
+            end if;
+        end if;
+        RETURN NEW;
+    END $$
+    LANGUAGE plpgsql;
 
+CREATE OR REPLACE TRIGGER algoritmo_fluoroscopia
+    BEFORE INSERT OR UPDATE OF id_algoritmo, id_paciente, id_imagen ON PROCESAMIENTO
+    FOR EACH ROW
+    EXECUTE PROCEDURE fn_costo_computacional_invalido_para_fluoroscopia_PROCESAMIENTO();
 ```
 
 
-<h2>CORRECCIONES</h2>
-- [ ] 3)d) el AFTER de nacionalidades se podria haber hecho con un BEFORE y haber comparado con el NEW.dato.
+<h2>Posibles mejoras</h2>
+- [ ] 3d. El AFTER de nacionalidades se podria haber hecho con un BEFORE y haber comparado con el NEW.dato.
+- [ ] 4c. Se podrían intentar usar argumentos para que quede una sola función.
+- [ ] 4b. Falta resolver.
