@@ -141,21 +141,21 @@ CREATE TRIGGER tr_comparar_con_fecha_procesamiento_update
 
 > [!IMPORTANT]
 > Si se quisiera asegurar de que luego de añadir la nueva columna (cuando todos los datos de la misma serán NULL) a futuro cuando hagamos una inserción en la tabla, si o si deba ser de un valor válido.
-
-```SQL
--- 1. Agregar la nueva columna sin la restricción NOT NULL
-ALTER TABLE IMAGEN_MEDICA
-ADD COLUMN fecha_img date;
-
--- 2. Actualizar los registros existentes con un valor no NULL
-UPDATE IMAGEN_MEDICA
-SET fecha_img = CURRENT_DATE
-WHERE fecha_img IS NULL;
-
--- 3. Agregar la restricción NOT NULL a la columna
-ALTER TABLE IMAGEN_MEDICA
-ALTER COLUMN fecha_img SET NOT NULL;
-```
+>
+> ```SQL
+> -- 1. Agregar la nueva columna sin la restricción NOT NULL
+> ALTER TABLE IMAGEN_MEDICA
+> ADD COLUMN fecha_img date;
+> 
+> -- 2. Actualizar los registros existentes con un valor no NULL
+> UPDATE IMAGEN_MEDICA
+> SET fecha_img = CURRENT_DATE
+> WHERE fecha_img IS NULL;
+> 
+> -- 3. Agregar la restricción NOT NULL a la columna
+> ALTER TABLE IMAGEN_MEDICA
+> ALTER COLUMN fecha_img SET NOT NULL;
+> ```
 
 4) D) Cada paciente sólo puede realizar dos FLUOROSCOPIA anuales.
 
@@ -215,6 +215,7 @@ CREATE OR REPLACE TRIGGER algoritmo_fluoroscopia
 
 
 <h2>Posibles mejoras</h2>
+
 - [ ] 3d. El AFTER de nacionalidades se podria haber hecho con un BEFORE y haber comparado con el NEW.dato.
 - [ ] 4c. Se podrían intentar usar argumentos para que quede una sola función.
 - [ ] 4b. Falta resolver.
