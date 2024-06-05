@@ -213,6 +213,84 @@ CREATE OR REPLACE TRIGGER algoritmo_fluoroscopia
     EXECUTE PROCEDURE fn_costo_computacional_invalido_para_fluoroscopia_PROCESAMIENTO();
 ```
 
+<h2>EJERCICIO 3</h2>
+
+5) B) Los descuentos realizados en fechas de liquidación deben superar el 30%.
+
+```SQL
+CREATE OR REPLACE FUNCTION fn_descuento_minimo_liquidacion_VENTA() RETURNS TRIGGER AS $$
+    DECLARE
+        var_dia_nuevo integer := EXTRACT(DAY FROM NEW.fecha);
+        var_mes_nuevo integer := EXTRACT(MONTH FROM NEW.fecha);
+    BEGIN
+        IF EXISTS(
+            SELECT 1 FROM fecha_liq f
+            WHERE f.dia_liq = var_dia_nuevo
+            AND f.mes_liq = var_mes_nuevo
+        ) THEN
+            RAISE NOTICE 'var_dia_nuevo: %', var_dia_nuevo;
+            RAISE NOTICE 'var_mes_nuevo: %', var_mes_nuevo;
+            -- RAISE NOTICE 'Es un dia de liquidacion';
+            IF (NEW.descuento < 30.00) THEN
+                RAISE EXCEPTION 'El descuento de prendas en liquidacón no puede ser menor al 30%%';
+            end if;
+        end if;
+        RETURN NEW;
+    END $$
+    LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE TRIGGER descuento_minimo_liquidacion_VENTA
+    BEFORE INSERT OR UPDATE OF descuento, fecha ON venta
+    FOR EACH ROW
+    EXECUTE PROCEDURE fn_descuento_minimo_liquidacion_VENTA();
+```
+
+5) C) Las liquidaciones de Julio y Diciembre no deben superar los 5 días.
+
+```SQL
+CREATE OR REPLACE FUNCTION fn_plazo_liq_julio_diciembre_FECHA_LIQ() RETURNS TRIGGER AS $$
+    BEGIN
+        IF (new.cant_dias > 5) then
+            RAISE EXCEPTION 'Las liquidaciones de Julio y Diciembre no deben superar los 5 días.';
+        end if;
+        RETURN NEW;
+    END $$
+    LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE TRIGGER plazo_liq_julio_diciembre_FECHA_LIQ
+    BEFORE INSERT OR UPDATE OF cant_dias, mes_liq ON fecha_liq
+    FOR EACH ROW
+    WHEN (NEW.mes_liq = 12 OR NEW.mes_liq = 7)
+    EXECUTE PROCEDURE fn_plazo_liq_julio_diciembre_FECHA_LIQ();
+```
+
+5) D) Las prendas de categoría ‘oferta’ no tienen descuentos.
+
+```SQL
+CREATE OR REPLACE FUNCTION fn_oferta_sin_descuento() RETURNS TRIGGER AS $$
+    DECLARE
+        var_descuento decimal(10,2) := NEW.descuento;
+    BEGIN
+        IF EXISTS (
+            SELECT 1 FROM prenda p
+            WHERE NEW.id_prenda = p.id_prenda
+            AND p.categoria ILIKE 'oferta'
+        ) THEN
+            IF (var_descuento <> 0) THEN
+                RAISE EXCEPTION 'Las prendas de categoría "oferta" no deben tener descuentos.';
+            end if;
+        END IF;
+        RETURN NEW;
+    END $$
+    LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER tr_oferta_sin_descuento
+    BEFORE INSERT OR UPDATE OF descuento, id_prenda ON venta
+    FOR EACH ROW
+    EXECUTE PROCEDURE fn_oferta_sin_descuento();
+```
 
 <h2>Posibles mejoras</h2>
 
