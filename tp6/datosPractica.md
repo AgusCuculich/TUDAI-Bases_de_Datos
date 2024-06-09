@@ -265,3 +265,113 @@ INSERT INTO PROCESAMIENTO (id_algoritmo, id_paciente, id_imagen, nro_secuencia, 
 
 UPDATE IMAGEN_MEDICA SET fecha_img = '2024-12-01' WHERE id_paciente = 10 AND id_imagen = 110;
 ```
+
+<h2>Ejercicio 3</h2>
+
+```SQL
+-- Created by Vertabelo (http://vertabelo.com)
+-- Last modification date: 2020-09-28 23:11:03.915
+
+-- tables
+-- Table: P5P2E5_CLIENTE
+CREATE TABLE CLIENTE (
+    id_cliente int  NOT NULL,
+    apellido varchar(80)  NOT NULL,
+    nombre varchar(80)  NOT NULL,
+    estado char(5)  NOT NULL,
+    CONSTRAINT PK_P5P2E5_CLIENTE PRIMARY KEY (id_cliente)
+);
+
+-- Table: P5P2E5_FECHA_LIQ
+CREATE TABLE FECHA_LIQ (
+    dia_liq int  NOT NULL,
+    mes_liq int  NOT NULL,
+    cant_dias int  NOT NULL,
+    CONSTRAINT PK_P5P2E5_FECHA_LIQ PRIMARY KEY (dia_liq,mes_liq)
+);
+
+-- Table: P5P2E5_PRENDA
+CREATE TABLE PRENDA (
+    id_prenda int  NOT NULL,
+    precio decimal(10,2)  NOT NULL,
+    descripcion varchar(120)  NOT NULL,
+    tipo varchar(40)  NOT NULL,
+    categoria varchar(80)  NOT NULL,
+    CONSTRAINT PK_P5P2E5_PRENDA PRIMARY KEY (id_prenda)
+);
+
+-- Table: P5P2E5_VENTA
+CREATE TABLE VENTA (
+    id_venta int  NOT NULL,
+    descuento decimal(10,2)  NOT NULL,
+    fecha timestamp  NOT NULL,
+    id_prenda int  NOT NULL,
+    id_cliente int  NOT NULL,
+    CONSTRAINT PK_P5P2E5_VENTA PRIMARY KEY (id_venta)
+);
+
+-- foreign keys
+-- Reference: FK_P5P2E5_VENTA_CLIENTE (table: P5P2E5_VENTA)
+ALTER TABLE VENTA ADD CONSTRAINT FK_VENTA_CLIENTE
+    FOREIGN KEY (id_cliente)
+    REFERENCES CLIENTE (id_cliente)
+    NOT DEFERRABLE
+    INITIALLY IMMEDIATE
+;
+
+-- Reference: FK_P5P2E5_VENTA_PRENDA (table: P5P2E5_VENTA)
+ALTER TABLE VENTA ADD CONSTRAINT FK_VENTA_PRENDA
+    FOREIGN KEY (id_prenda)
+    REFERENCES PRENDA (id_prenda)
+    NOT DEFERRABLE
+    INITIALLY IMMEDIATE
+;
+
+-- Tabla: CLIENTE
+INSERT INTO CLIENTE (id_cliente, apellido, nombre, estado) VALUES
+(1, 'González', 'Carlos', 'ACT'),
+(2, 'Pérez', 'María', 'ACT'),
+(3, 'Rodríguez', 'Juan', 'INA'),
+(4, 'López', 'Ana', 'ACT'),
+(5, 'Martínez', 'Luis', 'ACT');
+
+-- Tabla: FECHA_LIQ
+INSERT INTO FECHA_LIQ (dia_liq, mes_liq, cant_dias) VALUES
+(1, 1, 31),
+(1, 2, 28),
+(1, 3, 31),
+(1, 4, 30),
+(1, 5, 31),
+(1, 6, 30),
+(1, 7, 31),
+(1, 8, 31),
+(1, 9, 30),
+(1, 10, 31),
+(1, 11, 30),
+(1, 12, 31);
+
+-- Tabla: PRENDA
+INSERT INTO PRENDA (id_prenda, precio, descripcion, tipo, categoria) VALUES
+(1, 25.99, 'Camiseta blanca', 'Ropa', 'Camisetas'),
+(2, 49.99, 'Pantalones vaqueros', 'Ropa', 'Pantalones'),
+(3, 99.99, 'Chaqueta de cuero', 'Ropa', 'Chaquetas'),
+(4, 15.99, 'Sombrero de paja', 'Accesorios', 'Sombreros'),
+(5, 5.99, 'Calcetines deportivos', 'Ropa', 'Calcetines');
+
+-- Tabla: VENTA
+INSERT INTO VENTA (id_venta, descuento, fecha, id_prenda, id_cliente) VALUES
+(1, 5.00, '2024-06-04 10:30:00', 1, 1),
+(2, 10.00, '2024-06-04 11:00:00', 2, 2),
+(3, 0.00, '2024-06-04 11:30:00', 3, 3),
+(4, 2.50, '2024-06-04 12:00:00', 4, 4),
+(5, 1.00, '2024-06-04 12:30:00', 5, 5);
+```
+
+Pruebas 3.b
+
+```SQL
+INSERT INTO venta (id_venta, descuento, fecha, id_prenda, id_cliente) VALUES
+(11, 60.00, '2002-05-01 10:30:00.000000', 5, 1);
+
+UPDATE VENTA SET descuento = 20.00 WHERE id_venta = 10;
+```
