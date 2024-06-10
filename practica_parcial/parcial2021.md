@@ -77,3 +77,48 @@ FROM entrega e
 WHERE e.id_video = 1    -- Aquí iría el nuevo registro que se esta insertando
 ```
 
+<h2>EJERCICIO 2</h2>
+
+```SQL
+CREATE OR REPLACE TRIGGER tr_borrar_vista3
+INSTEAD OF DELETE ON VISTA_3
+FOR EACH ROW
+EXECUTE FUNCTION fn_propagar_borrado();
+
+CREATE OR REPLACE FUNCTION fn_propagar_borrado() RETURNS TRIGGER AS $$
+    BEGIN
+        RAISE NOTICE 'Llame al trigger';
+        --Si no existe el adjunto que queremos borrar
+        IF NOT EXISTS(
+            SELECT 1
+            FROM adjunto
+            WHERE id_adjunto = OLD.id_adjunto
+        )THEN
+
+            RAISE EXCEPTION 'No existe el adjunto con la id: %', OLD.id_adjunto;
+
+        ELSE
+
+            RAISE NOTICE 'Existe el adjunto que queremos borrar';
+
+            --Si el adjunto es de tipo imagen, lo borramos de la tabla imagen
+            IF (OLD.tipo_adj ILIKE 'I') THEN
+                RAISE NOTICE 'Borrada imagen';
+                DELETE FROM imagen WHERE id_adjunto = OLD.id_adjunto;
+
+            --Si el adjunto es de tipo audio, lo borramos de la tabla audio
+            ELSIF (OLD.tipo_adj ILIKE 'A') THEN
+                RAISE NOTICE 'Borrado audio';
+                DELETE FROM audio WHERE id_adjunto = OLD.id_adjunto;
+            end if;
+
+            -- Elinamos la referencia por FK del id_adjunto de la tabla contiene
+            DELETE FROM contiene WHERE id_adjunto = OLD.id_adjunto;
+
+            --Una vez que todas las foreign keys fueron borradas, borramos de la tabla referenciada
+            DELETE FROM adjunto WHERE id_adjunto = OLD.id_adjunto;
+        END IF;
+        RETURN OLD;
+    END;
+    $$ LANGUAGE plpgsql;
+```
