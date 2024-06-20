@@ -101,9 +101,40 @@ UNIQUE (nombre_proyecto);
 > [!IMPORTANT]
 > En las tablas "directivo" y "tecnico" la columna "DNI" hace referencia a la columna (PK) "DNI" de la tabla "empleado". Como la consigna nos pide que ante una modificación o update en la tabla "empleado", los mismos se vean reflejados en la tablas que la referencian, utilizamos CASCADE al definir las contraints FK_directivo_empleado y FK_tecnico_empleado.
 
+<h1>Consigna 3</h1>
+
+<img src="./img/ej3_1.png" alt="Consigna 3"/>
+<img src="./img/ej3_2.png" alt="Consigna 3"/>
+
+¿Cuál/es de las siguientes operaciones proceden y cuál/es fallan?
+
+```SQL
+DELETE FROM SE_INSCRIBE WHERE DNI = ‘38159753’; -- Procede
+-- Sus columnas no se referencian en otras tablas, con lo que no habría problema en eliminar un registro de la misma.
+
+DELETE FROM ALUMNO WHERE DNI = ’41597842’; -- Falla
+-- La columna es referenciada en la tabla "se_inscribe", donde la acción referencial para un delete es de tipo RESTRICT.
+
+DELETE FROM MATERIA WHERE id_carrera =’C’;  -- Procede
+-- La columna es referenciada en la tabla "se_inscribe", donde la acción referencial para un delete es de tipo CASCADE (la fila en la tabla principal será eliminada y también serán eliminadas las filas de otras tablas que la referencian).
+
+UPDATE MATERIA SET id_materia = ’3’ WHERE id_carrera =’E’;  -- Falla
+-- En la tabla "materia" no existe un id_carrera = 'E' asociado a una materia cuyo id_materia = 3.
+
+UPDATE SE_INSCRIBE SET id_materia = 2 WHERE DNI = ‘41597842’ AND id_materia = 1;  -- Falla
+-- Similar a la anterior, en la tabla "materia" no existe un id_carrera = 'A' asociado a una materia cuyo id_materia = 1.
+
+UPDATE ALUMNO SET DNI = ‘39852458’ WHERE DNI = ‘39852456’’;  -- Procede
+-- El cambio se realiza sobre la tabla "alumno", cuya fila es referenciada en la tabla "se_inscribe". En esta, la acción referencial para un update es de tipo CASCADE.
+
+DELETE FROM MATERIA WHERE id_materia = 3;  -- Procede
+-- La acción definida para un delete en la tabla que referencia "materia" es de tipo CASCADE, con lo que procede y la columna de la tabla principal se elimina al igual que aquellas filas en "se_inscribe" que la referencian.
+
+```
+
 <h1>Extras</h1>
 
-Script de creacion de tablas
+Scripts de creación de las tablas
 
 ```SQL
 -- tables
