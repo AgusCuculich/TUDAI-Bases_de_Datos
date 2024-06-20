@@ -110,27 +110,53 @@ UNIQUE (nombre_proyecto);
 
 ```SQL
 DELETE FROM SE_INSCRIBE WHERE DNI = ‘38159753’; -- Procede
--- Sus columnas no se referencian en otras tablas, con lo que no habría problema en eliminar un registro de la misma.
+/*Sus columnas no se referencian en otras tablas, con lo que no habría problema en eliminar un registro de la misma.*/
 
 DELETE FROM ALUMNO WHERE DNI = ’41597842’; -- Falla
--- La columna es referenciada en la tabla "se_inscribe", donde la acción referencial para un delete es de tipo RESTRICT.
+/*La columna es referenciada en la tabla "se_inscribe", donde la acción referencial para un delete es de tipo RESTRICT.*/
 
 DELETE FROM MATERIA WHERE id_carrera =’C’;  -- Procede
--- La columna es referenciada en la tabla "se_inscribe", donde la acción referencial para un delete es de tipo CASCADE (la fila en la tabla principal será eliminada y también serán eliminadas las filas de otras tablas que la referencian).
+/*Procede ya que la materia cuyo id_carrera = 'C' no esta referenciado en ninguna otra tabla. Y si fuera asi, también 
+procedería ya que la acción referencial para un delete es de tipo CASCADE (la fila en la tabla principal será eliminada 
+y también serán eliminadas las filas de otras tablas que la referencian).*/
 
 UPDATE MATERIA SET id_materia = ’3’ WHERE id_carrera =’E’;  -- Falla
--- En la tabla "materia" no existe un id_carrera = 'E' asociado a una materia cuyo id_materia = 3.
+/*No se puede ya que la materia cuyo id_carrera =’E’ esta refenciada en la tabla "se_incribe", donde la acción referencial
+para un update es de tipo RESTRICT.*/
 
 UPDATE SE_INSCRIBE SET id_materia = 2 WHERE DNI = ‘41597842’ AND id_materia = 1;  -- Falla
--- Similar a la anterior, en la tabla "materia" no existe un id_carrera = 'A' asociado a una materia cuyo id_materia = 1.
+/*Ya existe en la tabla "se_inscribe" un registro cuyo id_materia = 2 y DNI = ‘41597842’, con lo que rompería con la 
+característica de unicidad de la PK*/
 
 UPDATE ALUMNO SET DNI = ‘39852458’ WHERE DNI = ‘39852456’’;  -- Procede
--- El cambio se realiza sobre la tabla "alumno", cuya fila es referenciada en la tabla "se_inscribe". En esta, la acción referencial para un update es de tipo CASCADE.
+/*El cambio se realiza sobre la tabla "alumno", cuya fila es referenciada en la tabla "se_inscribe". En esta, la acción 
+referencial para un update es de tipo CASCADE.*/
 
 DELETE FROM MATERIA WHERE id_materia = 3;  -- Procede
--- La acción definida para un delete en la tabla que referencia "materia" es de tipo CASCADE, con lo que procede y la columna de la tabla principal se elimina al igual que aquellas filas en "se_inscribe" que la referencian.
+/*La acción definida para un delete en la tabla que referencia "materia" es de tipo CASCADE, con lo que procede y la 
+columna de la tabla principal se elimina al igual que aquellas filas en "se_inscribe" que la referencian.*/
 
 ```
+
+<h1>Consigna 4</h1>
+
+Utilizando el esquema unc_esq_voluntario. Cual/Cuales son los coordinadores(nombre) que han tenido a cargo la mayor cantidad de voluntarios que hayan realizado cualquier tarea terminada en CLERK.
+
+a. Den, Luisa
+b. Luisa
+c. Ninguna de las opciones es correcta
+| d. Payam, Matthew, Adam, Kevin, Shanta |
+e. Laura, Guy
+
+```SQL
+SELECT coor.nro_voluntario, coor.nombre AS "Coordinador", COUNT(v.nombre)
+FROM  voluntario v
+JOIN voluntario coor ON v.id_coordinador=coor.nro_voluntario
+WHERE v.id_tarea ILIKE '%CLERK'
+GROUP BY coor.nro_voluntario, coor.nombre
+```
+
+<img src="./img/ej4_resultado.png" alt="Registros traidos DataGrip"/>
 
 <h1>Extras</h1>
 
