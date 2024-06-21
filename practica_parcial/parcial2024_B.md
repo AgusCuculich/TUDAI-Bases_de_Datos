@@ -2,11 +2,11 @@
 
 Dado el esquema de la figura
 
-<img src="./img/parcial_B/ej1_1.png" alt="Consigna 1" width="600px"/>
+<img src="./img/parcial_B/ej1_1.png" alt="Consigna 1" width="1000px"/>
 
 Si las foreign key fueran las que se indican debajo y se encuentran cargados los siguientes datos:
 
-<img src="./img/parcial_B/ej1_2.png" alt="Consigna 1" width="600px"/>
+<img src="./img/parcial_B/ej1_2.png" alt="Consigna 1" width="1000px"/>
 
 ```SQL
 DELETE FROM TIPO_SERVICIO WHERE codigo_tipo_serv =’C’;  -- Procede
@@ -65,7 +65,7 @@ AND id_distribuidor IN (
 <h1>Consigna 3</h1>
 Utilizando el esquema unc_esq_voluntario. De qué país(nombre) hay mayor cantidad de voluntarios que realizan una tarea terminada en REP.
 
-1. $\color{YellowGreen}{Reino Unido}$
+1. $\color{YellowGreen}{Reino\ Unido}$
 
 2. Ninguna de las opciones es correcta
 
