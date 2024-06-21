@@ -64,7 +64,7 @@ CREATE OR REPLACE TRIGGER tr_control_modalidades_uni_suministro
 <h3>Ayuda visual</h3>
 Imagen con cada tabla y las definiciones dadas por la cátedra para ver más claramente las claves faltantes.
 
-<img src="./img/parcial_A/claves_tablas.jpg" alt="Tablas y declaraciones de claves de la cátedra"/>
+<img src="./img/parcial_A/claves_tablas.jpg" alt="Tablas y declaraciones de claves de la cátedra" width="800px"/>
 
 ```SQL
 -- Declaración de claves faltantes para tabla "directivo".
@@ -103,8 +103,8 @@ UNIQUE (nombre_proyecto);
 
 <h1>Consigna 3</h1>
 
-<img src="./img/parcial_A/ej3_1.png" alt="Consigna 3"/>
-<img src="./img/parcial_A/ej3_2.png" alt="Consigna 3"/>
+<img src="./img/parcial_A/ej3_1.png" alt="Consigna 3" width="700px"/>
+<img src="./img/parcial_A/ej3_2.png" alt="Consigna 3" width="700px"/>
 
 ¿Cuál/es de las siguientes operaciones proceden y cuál/es fallan?
 

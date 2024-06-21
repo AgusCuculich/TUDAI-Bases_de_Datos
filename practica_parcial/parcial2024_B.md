@@ -2,11 +2,11 @@
 
 Dado el esquema de la figura
 
-<img src="./img/parcial_B/ej1_1.png" alt="Consigna 1" width="1000px"/>
+<img src="./img/parcial_B/ej1_1.png" alt="Consigna 1" width="700px"/>
 
 Si las foreign key fueran las que se indican debajo y se encuentran cargados los siguientes datos:
 
-<img src="./img/parcial_B/ej1_2.png" alt="Consigna 1" width="1000px"/>
+<img src="./img/parcial_B/ej1_2.png" alt="Consigna 1" width="700px"/>
 
 ```SQL
 DELETE FROM TIPO_SERVICIO WHERE codigo_tipo_serv =’C’;  -- Procede
