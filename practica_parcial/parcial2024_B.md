@@ -101,10 +101,87 @@ ORDER BY 2 DESC;
 
 <img src="./img/parcial_B/ej4.png" alt="Consigna 4"/>
 
+a) Este assertion comprueba que no existan registros de la tabla "trabaja_en" cuyos id_proyecto y cod_proyecto no se encuentren en la tabla directivo (esto verifica que no hayan empleados trabajando en proyectos sin directivo).
+
+```SQL
+CREATE ASSERTION control_directivo
+    CHECK(NOT EXISTS(
+        SELECT 1
+        FROM trabaja_en
+        WHERE (id_proyecto, cod_tipo_proy) NOT IN(
+            SELECT id_proyecto, cod_tipo_proy
+            FROM directivo
+        )
+    ));
+/*Un proyecto donde trabaja gente (tabla: trabaja_en), y tiene directivo (tabla: directivo),
+ es aquel proyecto que aparece en ambas tablas*/
+```
+
+b) Solución procedural utilizando triggers
+
+```SQL
+CREATE OR REPLACE FUNCTION fn_control_directivo_trabajadores() RETURNS TRIGGER AS $$
+    BEGIN
+        IF NOT EXISTS(
+            SELECT 1
+            FROM directivo d
+            WHERE NEW.id_proyecto = d.id_proyecto
+            AND NEW.cod_tipo_proy = d.cod_tipo_proy
+        ) THEN
+            RAISE EXCEPTION 'El proyecto con id: % y código de proyecto: %, no tiene un directivo que lo gestione', NEW.id_proyecto, NEW.cod_tipo_proy;
+        END IF;
+        RETURN NEW;
+    END $$
+    LANGUAGE plpgsql;
+
+-- Tabla: trabaja_en
+CREATE OR REPLACE TRIGGER tr_control_directivo_trabajadores
+    BEFORE INSERT OR UPDATE OF cod_tipo_proy, id_proyecto ON trabaja_en
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_control_directivo_trabajadores();
+/*Solo tomo en cuenta los casos de update e insert ya que sobre lo que ya hay en la tabla (un 
+proyecto con al menos un empleado)debemos verificar que exista un directivo que se encargue del mismo*/
+
+CREATE OR REPLACE FUNCTION fn_control_directivo() RETURNS TRIGGER AS $$
+    BEGIN
+        IF (TG_OP = 'UPDATE') THEN
+            cod_proy := OLD.cod_tipo_proy;
+            id_proy := OLD.id_proyecto;
+        ELSE
+            cod_proy := NEW.cod_tipo_proy;
+            id_proy := NEW.id_proyecto;
+        END IF;
+        IF (EXISTS(
+            SELECT 1
+            FROM trabaja_en t
+            WHERE (t.cod_tipo_proy, t.id_proyecto) = (cod_proy, id_proy)
+        )) THEN
+            RAISE EXCEPTION 'Los datos que está queriendo actualizar/eliminar no existen en la base de datos.';
+        END IF;
+        IF (TG_OP = 'DELETE') THEN
+            RETURN OLD;
+        END IF;
+        RETURN NEW;
+    END $$
+    LANGUAGE plpgsql;
+
+-- Tabla: directivo
+CREATE OR REPLACE TRIGGER tr_control_directivo
+    BEFORE DELETE OR UPDATE OF id_proyecto, cod_tipo_proy ON directivo
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_control_directivo();
+/*Como id_proyecto y cod_tipo_proy son FK, no es necesario corroborar en el INSERT que los campos
+mencionados coincidan con los de algún registro de la tabla trabaja_en*/ 
+```
+
 <h1>Consigna 5</h1>
 
 <img src="./img/parcial_B/ej5_1.png" alt="Consigna 5" width="1000px"/>
 <img src="./img/parcial_B/ej5_2.png" alt="Consigna 5" width="1000px"/>
+
+<h3>Ayuda visual</h3>
+Imagen con cada tabla y las definiciones dadas por la cátedra para ver más claramente las claves faltantes.
+<img src="./img/parcial_B/claves_tablas_b.jpg" alt="Tablas y declaraciones de claves de la cátedra" width="800px"/>
 
 <h1>Extras</h1>
 
@@ -161,6 +238,6 @@ CREATE TABLE TRABAJA_EN (
 
 <h1>To do</h1>
 
-- [ ] Consigna 4
+- [X] Consigna 4
 - [ ] Consigna 5
 - [ ] Falta el ejercicio de vistas
