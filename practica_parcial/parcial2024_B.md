@@ -183,6 +183,44 @@ mencionados coincidan con los de algún registro de la tabla trabaja_en*/
 Imagen con cada tabla y las definiciones dadas por la cátedra para ver más claramente las claves faltantes.
 <img src="./img/parcial_B/claves_tablas_b.jpg" alt="Tablas y declaraciones de claves de la cátedra" width="800px"/>
 
+```SQL
+-- Declaración de claves faltantes para tabla "multi_suministro".
+ALTER TABLE multi_suministro
+ADD CONSTRAINT FK_multi_suministro_empresa
+FOREIGN KEY (CUIT)
+REFERENCES empresa (CUIT)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+-- Declaración de claves faltantes para tabla "uni_suministro".
+ALTER TABLE uni_suministro
+ADD CONSTRAINT FK_uni_suministro_empresa
+FOREIGN KEY (CUIT)
+REFERENCES empresa (CUIT)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+-- Declaración de claves faltantes para tabla "provee".
+ALTER TABLE provee
+ADD CONSTRAINT FK_provee_suministro
+FOREIGN KEY (id_suministro, cod_tipo_sum)
+REFERENCES suministro (id_suministro, cod_tipo_sum);
+
+ALTER TABLE provee
+ADD CONSTRAINT PK_provee
+PRIMARY KEY (CUIT, id_suministro, cod_tipo_sum);
+
+-- Declaración de claves faltantes para tabla "suministro".
+ALTER TABLE suministro
+ADD CONSTRAINT PK_suministro
+PRIMARY KEY (id_suministro, cod_tipo_sum);
+
+-- Declaración de claves faltantes para tabla "tipo_suministro".
+ALTER TABLE tipo_suministro
+ADD CONSTRAINT AK_tipo_suministro
+UNIQUE (nombre_tipo_sum);
+```
+
 <h1>Extras</h1>
 
 Scripts de creación de las tablas
