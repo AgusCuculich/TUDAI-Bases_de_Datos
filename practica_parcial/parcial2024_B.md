@@ -97,6 +97,8 @@ GROUP BY p.nombre_pais
 ORDER BY 2 DESC;
 ```
 
+<img src="./img/parcial_B/ej3_datagrip.png" alt="Resultado traido en Datagrip"/>
+
 <h1>Consigna 4</h1>
 
 <img src="./img/parcial_B/ej4.png" alt="Consigna 4"/>
@@ -174,6 +176,35 @@ CREATE OR REPLACE TRIGGER tr_control_directivo
 mencionados coincidan con los de algún registro de la tabla trabaja_en*/ 
 ```
 
+> [!IMPORTANT]
+> Otra opción para resolver el trigger anterior (no esta checkeada ya que se nos ocurrió al ver la resolución de otro parcial):
+> 
+> ```SQL
+> CREATE OR REPLACE FUNCTION fn_control_directivo RETURNS TRIGGER AS $$
+> BEGIN
+>    IF EXISTS(
+>         SELECT 1
+>         FROM trabaja_en t
+>         WHERE t.id_proyecto = OLD.id.proyecto
+>         AND t.cod_tipo_proy = OLD.cod_tipo_proy
+>     ) 
+>     AND NOT EXISTS(
+>         SELECT 1
+>         FROM directivo d
+>         WHERE d.id_proyecto = OLD.id_proyecto
+>         AND d.cod_tipo_proy = OLD.cod_tipo_proy 
+>     ) THEN
+>         RAISE EXCEPTION 'No hay un directivo asignado al proyecto cuyo id es % y su código es %', OLD.id_proyecto, OLD.cod_tipo_proy;
+>     RETURN NEW;
+> END $$
+> LANGUAGE plpgsql;
+> 
+> CREATE OR REPLACE TRIGGER tr_control_directivo
+>     AFTER DELETE OR UPDATE OF id_proyecto, cod_tipo_proy ON DIRECTIVO
+>     FOR EACH ROW
+>     EXECUTE FUNCTION fn_control_directivo();
+> ```
+
 <h1>Consigna 5</h1>
 
 <img src="./img/parcial_B/ej5_1.png" alt="Consigna 5" width="1000px"/>
@@ -223,7 +254,7 @@ UNIQUE (nombre_tipo_sum);
 
 <h1>Consigna 6</h1>
 
-<img src="./img/parcial_B/ej6.png" alt="Tablas y declaraciones de claves de la cátedra"/>
+<img src="./img/parcial_B/ej6.png" alt="Diagrama consigna 6"/>
 
 Para el esquema de la figura y dadas las siguientes definiciones de vistas:
 
