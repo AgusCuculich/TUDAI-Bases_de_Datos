@@ -186,6 +186,89 @@ WHERE v.horas_aportadas IN(10500,11000)
 
 <img src="./img/parcial_A/ej5_datagrip.png" alt="Registros traidos DataGrip"/>
 
+<h1>Consigna 6</h1>
+
+<img src="./img/parcial_A/ej6.png" alt="Consigna 6"/>
+
+Para el esquema de la figura y dadas las siguientes definiciones de vistas:
+
+```SQL
+CREATE OR REPLACE VIEW v_cuit
+AS
+SELECT cuit, razon_social, nombre_comercial, e_mail, fecha_inicio_actividades
+FROM empresa
+WHERE cuit like '%666%';
+ 
+CREATE OR REPLACE VIEW v_cuit_mail
+AS
+SELECT *
+FROM v_cuit
+WHERE e_mail not like '%gmail%'
+WITH LOCAL CHECK OPTION;
+ 
+CREATE OR REPLACE VIEW v_cuit_parcial
+AS
+SELECT *
+FROM v_cuit
+WHERE razon_social like 'Bar%'
+WITH LOCAL CHECK OPTION;
+```
+
+Para las siguientes sentencias ejecutadas de manera independiente señalar las opciones que son VERDADERAS. Nota: Las respuestas incorrectas restan del puntaje total. Tenga cuidado al cortar y pegar las sentencias con las comillas simples ' '.
+
+a) Procede, inserta los datos en la tabla empresa y se muestran en todas las vistas
+
+```SQL
+INSERT INTO v_cuit_mail (cuit, razon_social, nombre_comercial, e_mail, fecha_inicio_actividades)
+VALUES (’20-11234567-7’, ‘Barraca’ , ‘Alvarado’ , ‘cc@hotmail.com’, to_date('20170103','YYYYMMDD'))
+```
+
+- [ ] Falso. Cumple con la condición de la vista v_cuit_mail, pero no con la condición de la vista v_cuit. Sin embargo, como la última no tiene la cláusula WITH CHECK OPTION, el nuevo registro se podrá insertar pero no se mostrará en esta vista ni en ninguna de sus vistas derivadas. Esto quiere decir que la tabla padre permitirá que se realice el INSERT por la falta del WCO, pero a la hora de conformar la vista a partir de los registros traidos del SELECT que cumplen con la condición, el nuevo registro no la cumplirá, con lo que no se mostrará en la vista padre, ni en las hijas que se basan en sus datos.
+
+b) Procede, inserta los datos en la tabla empresa pero no se muestran en la vista v_cuit
+
+```SQL
+INSERT INTO v_cuit_ail (cuit, razon_social, nombre_comercial, e_mail, fecha_inicio_actividades)
+VALUES (’20-11234567-7’, ‘Barraca’ , ‘Alvarado’ , ‘cc@hotmail.com’, to_date('20170103','YYYYMMDD'))
+```
+- [x] Verdadero. Cumple con la condición de la vista v_cuit_mail, pero no con la condición de la vista v_cuit. Sin embargo, como la última no tiene la cláusula WITH CHECK OPTION, el nuevo registro se podrá insertar pero no se mostrará en esta vista ni en ninguna de sus vistas derivadas. Esto quiere decir que la tabla padre permitirá que se realice el INSERT por la falta del WCO, pero a la hora de conformar la vista a partir de los registros traidos del SELECT que cumplen con la condición, el nuevo registro no la cumplirá, con lo que no se mostrará en la vista padre, ni en las hijas que se basan en sus datos.
+
+c) NO Procede, porque no cumple con la condición de la vista v_cuit
+
+```SQL
+INSERT INTO v_cuit_mail (cuit, razon_social, nombre_comercial, e_mail, fecha_inicio_actividades)
+VALUES (’20112345677’, ‘Barraca’ , ‘Alvarado’ , ‘cc@hotmail.com’, to_date('20170103','YYYYMMDD'))
+```
+
+- [ ] Falso. Procede con la inserción, pero no el registro nuevo no se mostrará en ninguna vista.
+
+d) NO Procede, da error.
+
+```SQL
+INSERT INTO v_cuit_mail (cuit, razon_social, nombre_comercial, e_mail, fecha_inicio_actividades)
+VALUES (’20112345677’, ‘Barraca’ , ‘Alvarado’ , ‘cc@hotmail.com’, to_date('20170103','YYYYMMDD'))
+```
+
+- [ ] Falso. Procede con la inserción, pero no el registro nuevo no se mostrará en ninguna vista.
+
+e) Procede, inserta los datos en la tabla empresa y no se muestran en la vista v_cuit, ni en la vista v_cuit_mail
+
+```SQL
+INSERT INTO v_cuit_mail (cuit, razon_social, nombre_comercial, e_mail, fecha_inicio_actividades)
+VALUES (’20112345677’, ‘Barraca’ , ‘Alvarado’ , ‘cc@hotmail.com’, to_date('20170103','YYYYMMDD'))
+```
+
+- [X] Verdadero. Cumple con la condición de la vista v_cuit_mail, pero no con la condición de la vista v_cuit. Sin embargo, como la última no tiene la cláusula WITH CHECK OPTION, el nuevo registro se podrá insertar pero no se mostrará en esta vista ni en ninguna de sus vistas derivadas. Esto quiere decir que la tabla padre permitirá que se realice el INSERT por la falta del WCO, pero a la hora de conformar la vista a partir de los registros traidos del SELECT que cumplen con la condición, el nuevo registro no la cumplirá, con lo que no se mostrará en la vista padre, ni en las hijas que se basan en sus datos.
+
+f) Procede, inserta los datos en la tabla empresa pero no se muestran en la vista v_cuit_mail
+
+```SQL
+INSERT INTO v_cuit_mail (cuit, razon_social, nombre_comercial, e_mail, fecha_inicio_actividades)
+VALUES (’20-11234567-7’, ‘Barraca’ , ‘Alvarado’ , ‘cc@hotmail.com’, to_date('20170103','YYYYMMDD'))
+```
+
+- [X] Verdadero. Cumple con la condición de la vista v_cuit_mail, pero no con la condición de la vista v_cuit. Sin embargo, como la última no tiene la cláusula WITH CHECK OPTION, el nuevo registro se podrá insertar pero no se mostrará en esta vista ni en ninguna de sus vistas derivadas. Esto quiere decir que la tabla padre permitirá que se realice el INSERT por la falta del WCO, pero a la hora de conformar la vista a partir de los registros traidos del SELECT que cumplen con la condición, el nuevo registro no la cumplirá, con lo que no se mostrará en la vista padre, ni en las hijas que se basan en sus datos.
+
 <h1>Extras</h1>
 
 Scripts de creación de las tablas
@@ -291,4 +374,3 @@ CREATE TABLE TRABAJA_EN (
 <h1>To do</h1>
 
 - [ ] Hacer la imagen que visualice el join en la tabla voluntario
-- [ ] Falta el ejercicio de vistas
