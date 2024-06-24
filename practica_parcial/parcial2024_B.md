@@ -221,6 +221,92 @@ ADD CONSTRAINT AK_tipo_suministro
 UNIQUE (nombre_tipo_sum);
 ```
 
+<h1>Consigna 6</h1>
+
+<img src="./img/parcial_B/ej6.png" alt="Tablas y declaraciones de claves de la cátedra"/>
+
+Para el esquema de la figura y dadas las siguientes definiciones de vistas:
+
+```SQL
+CREATE OR REPLACE VIEW v_gmail
+AS
+SELECT DNI, email, apellido, nombre, fecha_nac 
+FROM persona
+WHERE email like '%gmail%';
+ 
+CREATE OR REPLACE VIEW v_gmail_mayor
+AS
+SELECT *
+FROM v_gmail
+WHERE DNI > 23456789
+WITH LOCAL CHECK OPTION;
+ 
+CREATE OR REPLACE VIEW v_gmail_parcial
+AS
+SELECT *
+FROM v_gmail_mayor
+WHERE apellido like 'Bet%'
+WITH CASCADED CHECK OPTION;
+```
+
+Para las siguientes sentencias ejecutadas de manera independiente señalar las opciones que son FALSAS. Nota: Las respuestas incorrectas restan del puntaje total. Tenga cuidado al cortar y pegar las sentencias con las comillas simples ' '.
+
+a) Procede, inserta los datos en la tabla persona y se muestran en la vista v_gmail y en la vista v_gmail_mayor
+
+```SQL
+INSERT INTO v_gmail_mayor (DNI, email, apellido, nombre, fecha_nac)
+VALUES (33456789, ‘cc@gmail.com’, ‘Beta’, ‘J’, to_date('20170103','YYYYMMDD'))
+```
+- [ ] Verdadera. Cumple con la condición de la vista v_gmail_parcial, también cumple con la condición de la vista padre, v_gmail_mayor; y cumple con la condición de la vista padre de la última, v_gmail.
+
+> [!CAUTION]
+> Corrección de la cátedra sobre el punto anterior -> Falsa: Procede, inserta los datos en la tabla persona y se muestran en todas las vistas.
+
+b) Procede, inserta los datos en la tabla persona pero no se muestran en la vista v_gmail
+
+```SQL
+INSERT INTO v_gmail_mayor (DNI, email, apellido, nombre, fecha_nac)
+VALUES (33456789, ‘cc@hotmail.com’, ‘Beta’, ‘J’, to_date('20170103','YYYYMMDD'))
+```
+
+- [ ] Verdadera. Cumple con la condición de la vista v_gmail_mayor, pero no cumple con la condición de la vista padre de la última, v_gmail. Como v_gmail no tiene la cláusula WITH CHECK OPTION, permite que se realice el INSERT pero cuando haga el SELECT de los datos que cumplan la condición, el elemento añadido no la cumplirá, con lo que no se lo mostrará en la vista.
+
+c) NO Procede, da error.
+
+```SQL
+INSERT INTO v_gmail_mayor (DNI, email, apellido, nombre, fecha_nac)
+VALUES (33456789, ‘cc@hotmail.com’, ‘Beta’, ‘J’, to_date('20170103','YYYYMMDD'))
+```
+
+- [X] Falsa. Cumple con las condiciones de las vistas v_gmail_mayor y v_gmail. Sin embargo, no cumple con la condición de v_gmail. De igual manera, se nos permitirá hacer el INSERT (ya que la tabla v_gmail no tiene cláusula WITH CHECK OPTION) pero este nuevo dato no se mostrará en las vistas.
+
+d) Procede, inserta los datos en la tabla persona pero no se muestran en la vista v_gmai mayor
+
+```SQL
+INSERT INTO vgmail_mayor (DNI, email, apellido, nombre, fecha_nac)
+VALUES (33456789, ‘cc@hotmail.com’, ‘Beta’, ‘J’, to_date('20170103','YYYYMMDD'))
+```
+
+- [ ] Verdadero. Cumple con las condiciones de v_gmail_mayor, pero no con las condiciones de v_gmail. Sin embargo, como v_gmail no tiene cláusula CHECK OPTION, permite hacer el INSERT. Esto provocará que cuando se realice el SELECT de los registro de persona, el mismo no estará en la vista v_gmail ya que no cumple con su condición. Así mismo, tampoco formará parte de la vista v_gmail_mayor (ya que al no estar en la vista en la que se basa, tampoco estará en esta).
+
+e) NO Procede, porque no cumple con la condición de la vista v_gmail
+
+```SQL
+INSERT INTO v_gmail_mayor (DNI, email, apellido, nombre, fecha_nac)
+VALUES (33456789, ‘cc@hotmail.com’, ‘Beta’, ‘J’, to_date('20170103','YYYYMMDD'))
+```
+
+- [X] Falsa. Procede con el INSERT pero no se mostrará en las vistas.
+
+f) Procede, inserta los datos en la tabla persona y se muestran en todas las vistas
+
+```SQL
+INSERT INTO v_gmail_mayor (DNI, email, apellido, nombre, fecha_nac)
+VALUES (33456789, ‘cc@ hotmail.com’, ‘Beta’, ‘J’, to_date('20170103','YYYYMMDD'))
+```
+
+- [X] Falsa. Cumple con la condición de v_gmail_mayor, pero no con la condición de la vista v_gmail. Con lo que el elemento nuevo se insertará, pero no se mostrará en ninguna de las vistas.
+
 <h1>Extras</h1>
 
 Scripts de creación de las tablas
@@ -273,9 +359,3 @@ CREATE TABLE TRABAJA_EN (
     DNI int  NOT NULL
 );
 ```
-
-<h1>To do</h1>
-
-- [X] Consigna 4
-- [ ] Consigna 5
-- [ ] Falta el ejercicio de vistas
