@@ -1,12 +1,36 @@
-<h1>Restricciones de Integridad (RI)</h1>
-Aseguran que las modificaciones hechas a la base de datos por los usuarios autorizados no provoquen la pérdida de la consistencia de los datos. Ejemplos:
+# Contenido
+* [Restricciones de Integridad (RI)](#restricciones-de-integridad-ri)
+    * [Restricciones de Integridad Básicas](#restricciones-de-integridad-básicas)
+        * [UNIQUE](#unique)
+        * [NOT NULL](#not)
+        * [PRIMARY KEY](#primary-key)
+        * [FOREIGN KEY](#foreign-key)
+            * [Acciones Referenciales :arrow_right: DELETE/UPDATE](#foreign-key-acciones-referenciales-arrow_right-deleteupdate)
+            * [Tipos de Matching](#tipos-de-matching)
+    * [Otras Restricciones de Integridad en SQL](#otras-restricciones-de-integridad-en-sql)
+        * [DOMAIN o CHECK de atributo](#domain-o-check-de-atributo)
+        * [CHECK DE REGISTRO](#check-de-registro)
+        * [CHECK DE TABLA](#check-de-tabla)
+        * [ASSERTION](#assertion)
 
-* Los nombres y apellidos de los voluntarios no pueden ser nulos.
-* Un voluntario no puede aportar más de 10 horas semanales.
-* Un voluntario puede cambiar de tarea o de institución solamente dos veces al año.
+# Restricciones de Integridad (RI)
 
-<h4>Unique Constraints </h4>
-Ensure that the data contained in a column is unique among all the rows in the table.
+Reglas definidas en la BD para garantizar que cualquier modificación realizada por los usuarios no provoquen la pérdida de la consistencia de los datos.
+
+¿Cómo funciona?
+
+1. **DBA (DataBase Administrator): especifica las RI sobre los datos.**
+    * Código en las aplicaciones que acceden a los datos.
+    * restricciones (reglas o chequeos).
+2. **SGBD: evita actualizaciones en los datos que no cumplan las RI.**
+    * Rechazando la operación (insert, delete, update).
+    * Realizando acciones reparadoras extras.
+
+## Restricciones de Integridad Básicas
+
+### UNIQUE
+
+Specifies that a group of one or more columns of a table can contain only unique values
 
 ```SQL
 CREATE TABLE [IF NOT EXISTS] products (
@@ -15,10 +39,15 @@ CREATE TABLE [IF NOT EXISTS] products (
     price numeric,
     [CONSTRAINT UK_nom] UNIQUE (product_no)
 );
+``` 
+```SQL
+ALTER TABLE products 
+ADD CONSTRAINT UK_nom UNIQUE (product_no);
 ```
 
-<h4>Not Null Constraints</h4>
-A not-null constraint simply specifies that a column must not assume the null value.
+### NOT NULL
+
+The column is not allowed to contain null values.
 
 ```SQL
 CREATE TABLE [IF NOT EXISTS] products (
@@ -27,22 +56,37 @@ CREATE TABLE [IF NOT EXISTS] products (
     price numeric
 );
 ```
-
-<h4>Primary Keys</h4>
-A primary key constraint indicates that a column, or group of columns, can be used as a unique identifier for rows in the table. This requires that the values be both unique and not null.
-
 ```SQL
-CREATE TABLE [IF NOT EXISTS] products (
-    product_no integer [CONSTRAINT PK_products] PRIMARY KEY,
-    name text,
-    price numeric
-);
+ALTER TABLE products 
+ALTER COLUMN product_no SET NOT NULL;
 
-ALTER TABLE [IF EXISTS] table
-ADD [CONSTRAINT PK_nom] PRIMARY KEY (product_no);
+ALTER TABLE products 
+ALTER COLUMN name SET NOT NULL;
 ```
 
-Primary keys can span more than one column:
+> [!NOTE]
+> Si la tabla products ya contiene valores NULL en las columnas product_no o name, el comando ALTER COLUMN ... SET NOT NULL fallará.
+> Pasos para solucionarlo: 
+> 1. Reemplazar los valores NULL con valores por defecto.
+> 2. Luego, aplicar la restricción NOT NULL.
+> ```SQL
+> -- Reemplazar NULLs en product_no (suponiendo que 0 no es un valor válido en uso)
+> UPDATE products SET product_no = 0 WHERE product_no IS NULL;
+> 
+> -- Reemplazar NULLs en name (suponiendo que 'Desconocido' es un valor válido)
+> UPDATE products SET name = 'Desconocido' WHERE name IS NULL;
+> 
+> -- Ahora sí podemos aplicar la restricción NOT NULL
+> ALTER TABLE products 
+> ALTER COLUMN product_no SET NOT NULL;
+> 
+> ALTER TABLE products 
+> ALTER COLUMN name SET NOT NULL;
+> ```
+
+### PRIMARY KEY
+
+It indicates that a column, or group of columns, can be used as a unique identifier for rows in the table. This requires that the values be both unique and not null.
 
 ```SQL
 CREATE TABLE [IF NOT EXISTS] example (
@@ -52,9 +96,24 @@ CREATE TABLE [IF NOT EXISTS] example (
     [CONSTRAINT PK_example] PRIMARY KEY (a, c)
 );
 ```
-[Alter-Table(PostgreSQL16](https://www.postgresql.org/docs/16/sql-altertable.html)
+```SQL
+ALTER TABLE [IF EXISTS] table
+ADD [CONSTRAINT PK_nom] PRIMARY KEY (a, b);
+```
+> [!IMPORTANT]
+> No se puede agregar una clave primaria a una tabla que ya tiene otra clave primaria.
+> 
+> **Posible solución**: eliminar la clave existente, luego cambiar la pk.
+> ```SQL
+> ALTER TABLE example 
+> DROP CONSTRAINT PK_example;
+> 
+> ALTER TABLE example
+> ADD CONSTRAINT PK_nom PRIMARY KEY (a, b);
+> ```
 
-<h4>Foreign Keys</h4>
+### FOREIGN KEY
+
 A foreign key constraint specifies that the values in a column (or a group of columns) must match the values appearing in some row of another table. We say this maintains the referential integrity between two related tables.
 
 ```SQL
@@ -77,17 +136,19 @@ CREATE TABLE order_items (
     PRIMARY KEY (product_no, order_id)
 );
 ```
-A foreign key can also constrain and reference a group of columns. As usual, it then needs to be written in table constraint form. (Of course, the number and type of the constrained columns need to match the number and type of the referenced columns).
+
+A foreign key can also constrain and reference a group of columns.
 
 ```SQL
 CREATE TABLE t1 (
-  a integer PRIMARY KEY,
-  b integer,
-  c integer,
-  FOREIGN KEY (b, c) REFERENCES other_table (c1, c2)
+    a integer PRIMARY KEY,
+    b integer,
+    c integer,
+    FOREIGN KEY (b, c) REFERENCES other_table (c1, c2)
 );
 ```
-self-referential foreign key
+
+Self-referential foreign key
 
 ```SQL
 CREATE TABLE tree (
@@ -98,31 +159,20 @@ CREATE TABLE tree (
 );
 ```
 
-[Constraints](https://www.postgresql.org/docs/16/ddl-constraints.html#DDL-CONSTRAINTS-FK)
+Acciones Referenciales :arrow_right: DELETE/UPDATE
 
-<h4>Acciones referenciales: DELETE/UPDATE</h4>
+¿Qué sucede cuando se intenta eliminar/modificar un registro de la tabla A que está siendo referenciada en la tabla B por la FK?
 
-Rechazo de la operación
-
+**Opción 1: Rechazo de la operación**
 * **NO ACTION**: prevents deletion/update of a referenced row.
-* **RESTRICT**: if any referencing rows still exist when the constraint is checked, an error is raised; this is the default behavior if you do not specify anything.
+* **RESTRICT (DEFAULT)**: if any referencing rows still exist when the constraint is checked, an error is raised; this is the default behavior if you do not specify anything.
 
 > The essential difference between these two choices is that NO ACTION allows the check to be deferred until later in the transaction whereas RESTRICT does not.
 
-Acepta op y realiza acciones reparadoras
-
+**Opción 2: Acepta la operación y realiza acciones reparadoras**
 * **CASCADE**: when a referenced row is deleted/updated, row(s) referencing it should be automatically deleted/updated as well.
-* **SET NULL**: These cause the referencing column(s) in the referencing row(s) to be set to nulls or their default values
+* **SET NULL**: these cause the referencing column(s) in the referencing row(s) to be set to nulls.
 * **SET DEFAULT**: coloca un valor por defecto a aquellos registros que referencian a dicha clave primaria.
-
-> [!TIP]
-> When the referencing table represents something that is a component of what is represented by the referenced table and cannot exist independently, then CASCADE could be appropriate.
-
-> [!TIP]
-> If the two tables represent independent objects, then RESTRICT or NO ACTION is more appropriate.
-
-> [!TIP]
-> The actions SET NULL or SET DEFAULT can be appropriate if a foreign-key relationship represents optional information.
 
 ```SQL
 CREATE TABLE tenants (
@@ -130,25 +180,35 @@ CREATE TABLE tenants (
 );
 
 CREATE TABLE users (
-    tenant_id integer REFERENCES tenants ON DELETE CASCADE,
-    user_id integer NOT NULL,
     PRIMARY KEY (tenant_id, user_id)
+    user_id integer NOT NULL,
+    tenant_id integer REFERENCES tenants,
+    ON DELETE CASCADE
 );
 
 CREATE TABLE posts (
-    tenant_id integer REFERENCES tenants ON DELETE CASCADE,
+    PRIMARY KEY (tenant_id, post_id),
     post_id integer NOT NULL,
     author_id integer,
-    PRIMARY KEY (tenant_id, post_id),
-    FOREIGN KEY (tenant_id, author_id) REFERENCES users ON DELETE SET NULL (author_id)
+    tenant_id integer REFERENCES tenants 
+    ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id, author_id) REFERENCES users 
+    ON DELETE SET NULL (author_id)
 );
 ```
 
-<h4>Tipos de matching</h4>
+#### Tipos de Matching
 
-* **Datos válidos en todas las columnas:** Si todas las columnas que forman la clave externa tienen valores no nulos, el DBMS buscará una fila correspondiente en la tabla referenciada.
-* **NULL en al menos una columna:** cuando al menos una columna de la clave externa es NULL, se considera que no hay un "match" entre las filas de las tablas relacionadas, lo que permite la operación sin violar la integridad referencial de la base de datos.
-* **Todos los valores NULL:** Si todas las columnas de la clave externa son NULL, también se permitirá la operación por la misma razón mencionada anteriormente.
+Los tipos de matching afectan cuando las FK se definen sobre varios atributos, y pueden contener valores nulos.
+
+La integridad referencial se satisface si para cada registro en la tabla referenciante se verifica lo siguiente:
+
+1. **Ninguno de los valores de las columnas de la FK es NULL y existe un registro en la tabla referenciada cuyos valores de la clave coinciden con los de tales columnas.**
+
+2. o
+* **MATCH SIMPLE** (DEFAULT): allows any of the foreign key columns to be null; if any of them are null, the row is not required to have a match in the referenced table.
+* **MATCH FULL**: will not allow one column of a multicolumn foreign key to be null unless all foreign key columns are null; if they are all null, the row is not required to have a match in the referenced table.
+* **MATCH PARTIAL**: is not yet implemented (on PostgreSQL).
 
 <table>
     <thead>
@@ -177,120 +237,162 @@ CREATE TABLE posts (
     </tbody>
 </table>
 
-> [!CAUTION]
-> MATCH PARTIAL is not yet implemented.
+## Otras Restricciones de Integridad en SQL
+
+### DOMAIN o CHECK de atributo
+
+Permiten definir el conjunto de los valores válidos de un atributo.
+
+* Casos particulares: NOT NULL, DEFAULT, PRIMARY KEY, UNIQUE
+* Se pueden especificar las RI del atributo en la sentencia CREATE TABLE o definirlas en un dominio y declarar el atributo perteneciente al dominio.
 
 ```SQL
-CREATE TABLE NombreTabla ( ...
-    [ [CONSTRAINT FK_nom] FOREIGN KEY (lista_columnasFK)
-    REFERENCES nombreTablaRef [(lista_columnasRef)]
-    [ MATCH {FULL | PARTIAL | SIMPLE}]
-    [ON UPDATE AccionRef]
-    [ON DELETE AccionRef] ] ...
-);
+CREATE DOMAIN NomDominio
+AS TipoDato [ DEFAULT ValorDefecto ]
+[ [CONSTRAINT NomRestriccion] CHECK (condición) ];  -- La condición debe evaluar como V o F
 ```
-[Crate-Table(PostgreSQL16)](https://www.postgresql.org/docs/16/sql-createtable.html)
 
-<h4>Otras RI en SQL</h4>
-
-1. **CHECK**
-
-It allows you to specify that the value in a certain column must satisfy a Boolean (truth-value) expression. Expressions evaluating to TRUE or UNKNOWN succeed.
-
-Pueden plantearse distintos tipos de condiciones:
+Pueden plantearse distinto tipo de condiciones:
 
 * **Comparación simple:** operadores (=,<,>,<=,>=,<>) Ej:Sueldo > 0
 * **Rango:** [NOT] BETWEEN (incluye extremos) Ej: nota BETWEEN 0 AND 10
 * **Pertenencia:** [NOT] IN Ej: Area IN (‘Académica’, ‘Posgrado’, ‘Extensión’)
 * **Semejanza de Patrones:** [NOT] LIKE % (para 0 o más caracteres) Ej: LIKE ‘s%’ - (para un carácter simple) Ej: LIKE ‘s_’
 
-> [!IMPORTANT]
-> Currently, CHECK expressions cannot contain subqueries nor refer to variables other than VALUE.
+A su vez, las condiciones pueden ser:
 
-<table>
-    <thead>
-        <tr>
-            <th></th>
-            <th>CHECK de tupla</th>
-            <th>CHECK de tabla</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Una fila específica viola una condición</td>
-            <td>Solo esa operación de inserción o actualización es rechazada, y las demás filas que cumplen con la condición se insertan o actualizan sin problemas.</td>
-            <td>Se rechaza la operación completa de inserción o actualización, y ninguna fila se modifica en la tabla.</td>
-        </tr>
-        <tr>
-            <td>Ámbito de la restricción</td>
-            <td>Tupla</td>
-            <td>Tabla</td>
-        </tr>
-        <tr>
-            <td>Ejemplo</td>
-            <td><pre lang="sql">
+* **Negadas:** IS [NOT] NULL
+* **Concatenadas:** utilizando AND, OR
+
+**`Ejemplo 1`**
+
+```SQL
+-- No se permite edad menor a 18
+CREATE TABLE Empleados (
+    ID INT PRIMARY KEY,
+    Nombre VARCHAR(50),
+    Edad INT CONSTRAINT chk_edad CHECK (Edad >= 18)
+);
+```
+```SQL
+-- No se permite edad menor a 18
+CREATE DOMAIN EdadValida 
+AS INT
+CONSTRAINT chk_edad CHECK (VALUE >= 18);
+```
+
+**`Ejemplo 2`**
+
+```SQL
+-- Las especialidades de los ingenieros pueden ser "inteligencia empresarial" , "tecnologias móviles" , "gestión de TI" o "desarrollo"
+CREATE DOMAIN especialidad 
+AS varchar(20)
+CHECK( VALUE IN (‘inteligencia empresarial’ , ‘tecnologias móviles’ , ‘gestión de TI’, ‘desarrollo’));
+```
+
+### CHECK DE REGISTRO
+
+Aplica restricciones que involucran uno o más atributos dentro de una misma fila.
+
+```SQL
+CREATE TABLE NombreTabla
+[[CONSTRAINT nom_restr] CHECK (condición) ];    -- La condición debe evaluar como V o Desconocida
+```
+```SQL
+ALTER TABLE NombreTabla
+ADD [CONSTRAINT nom_restr] CHECK (condición);   -- La condición debe evaluar como V o Desconocida
+```
+
+**`Ejemplo 1`**
+
+```SQL
+-- El descuento no puede ser mayor que el precio
+CREATE TABLE Productos (
+    ID INT PRIMARY KEY,
+    Precio DECIMAL(10,2),
+    Descuento DECIMAL(10,2),
+    CHECK (Descuento <= Precio)
+);
+```
+**`Ejemplo 2`**
+
+```SQL
+-- Los tipos de areas BC sólo pueden tener id_areas que van del 3 al 7 para el resto no habría controles.
 ALTER TABLE AREA
-    ADD CONSTRAINT ck_control_area
-    CHECK ( ( (tipo_area = ‘BC’) 
-    AND (id_area BETWEEN (3 AND 7) ) 
-    OR
-    tipo_area <> ‘BC’) );
-            </pre></td>
-            <td><pre lang="sql">
+ADD CONSTRAINT ck_control_area
+CHECK (( (tipo_area = ‘BC’) AND (id_area BETWEEN (3 AND 7) ) OR tipo_area <> ‘BC’));
+```
+
+**`Ejemplo 3`**
+
+```SQL
+-- No puede haber más de 30 empleados por área.
 ALTER TABLE Empleado
-    ADD CONSTRAINT ck_area_max
-    CHECK ( NOT EXISTS (SELECT 1
-                        FROM Empleado
-                        GROUP BY tipo_area, id_area
-                        HAVING count(*) > 30));
-            </pre></td>
-        </tr>
-    </tbody>
-</table>
-
-> [!CAUTION]
-> La gran mayoría de los DBMS comerciales no soportan los check de tabla!
-
-2. **Dominio**
-
-Domains are useful for abstracting common constraints on fields into a single location for maintenance. For example, several tables might contain email address columns, all requiring the same CHECK constraint to verify the address syntax. Define a domain rather than setting up each table's constraint individually.
-
-    * Casos particulares: NOT NULL, DEFAULT, PRIMARY KEY, UNIQUE.
-    * Ámbito de la restricción: atributo.
-
-```SQL
-CREATE DOMAIN NomDominio
-AS TipoDato [ DEFAULT ValorDefecto ]
-[CONSTRAINT NomRestriccion] CHECK (condición);
-```
-
-> [!NOTE]
-> When a domain has multiple CHECK constraints, they will be tested in alphabetical order by name.
-
-3. **ASSERTIONS (RI globales)**
-
-Una "assertion" puede aplicarse a un conjunto arbitrario de atributos o incluso a múltiples tablas. Su activación ocurre cuando se realizan operaciones de actualización en las tablas involucradas en la definición de la "assertion". Si la afirmación resulta ser falsa, el programa puede generar una advertencia, error o realizar alguna acción definida por el programador para manejar la situación.
-
-```SQL
-CREATE ASSERTION salario_valido
-    CHECK ( NOT EXISTS ( SELECT 1 FROM Empleado E, Empleado G, Area A
-    WHERE E.sueldo > G.sueldo
-    AND E.AreaT = A.IdArea
-    AND G.IdE = A.gerente ) );
-```
-
-> [!IMPORTANT]
-> SQL no proporciona un mecanismo para expresar la condición «para todo X, P(X)»
-> (P=predicado) → se debe utilizar su equivalente «no existe X tal que no P(X)»
-> **Ejemplo:** Supongamos que tenemos una tabla llamada "empleados", y queremos asegurarnos de que ningún empleado tenga un salario inferior a \$2000 (es decir, que "todos los empleados tienen un salario superior a \$2000"). Podríamos expresar esto usando la afirmación "no existe un empleado cuyo salario sea inferior a \$2000".
-
-```SQL
-CREATE ASSERTION salario_minimo
+ADD CONSTRAINT ck_area_max
 CHECK (NOT EXISTS(
-    SELECT 1 FROM empleados
-    WHERE salario < 2000
+    SELECT 1
+    FROM Empleado
+    GROUP BY tipo_area, id_area
+    HAVING count(*) > 30
 ));
 ```
 
+**`Ejemplo 4`**
+
+```SQL
+-- Los proyectos sin fecha de finalización asignada no deben superar $100000 de presupuesto.
+ALTER TABLE EJ_PROYECTO
+ADD CONSTRAINT ck_proyectosenfecha
+CHECK ((fecha_fin IS NULL AND presupuesto < 100000) OR (fecha_fin IS NOT NULL));
+```
+
+### CHECK DE TABLA
+
+Aplica restricciones que involucran múltiples filas de la misma tabla.
+
 > [!CAUTION]
-> Los DBMS comerciales no soportan ASSERTIONS!
+> En SQL estándar, CHECK no puede referenciar otras filas de la misma tabla, por lo que en la práctica, estas restricciones se implementan mediante TRIGGERS o procedimientos almacenados.
+
+**`Ejemplo 1`**
+
+```SQL
+-- En cada proyecto pueden trabajar 10 ingenieros como máximo
+ALTER TABLE EJ_TRABAJA
+ADD CONSTRAINT ck_cant_ingenieros
+CHECK (NOT EXIST (
+    SELECT 1
+    FROM EJ_TRABAJA
+    GROUP BY id_sector, nro_proyecto
+    HAVING COUNT(*) > 10
+));
+```
+
+### ASSERTION
+
+Permiten definir restricciones sobre un número arbitrario de atributos de un número arbitrario de tablas.
+
+> [!CAUTION]
+> ASSERTION es un concepto teórico, pero no está implementado en la mayoría de los motores de bases de datos SQL estándar. En su lugar, se suelen usar TRIGGERS o procedimientos almacenados.
+
+```SQL
+CREATE ASSERTION NomAssertion CHECK (condición);    -- La condición debe evaluar como V o Desconocida
+```
+
+**`Ejemplo 1`**
+
+```SQL
+-- El director asignado a un proyecto debe haber trabajado al menos en 5 proyectos.
+CREATE ASSERTION CK_PROY_DIRE
+    CHECK (NOT EXISTS(
+        SELECT P.director, COUNT(*) AS "cantidad proyectos"
+        FROM EJ_PROYECTO P 
+        JOIN EJ_TRABAJA T ON (P.director = T.id_ingeniero)
+        JOIN EJ_PROYECTO PP ON (PP.id_sector = T.id_sector AND PP.nro_proyecto = T.nro_proyecto)
+        WHERE PP.fecha_fin IS NOT NULL
+        GROUP BY P.director
+        HAVING COUNT(*) < 5
+    ));
+```
+
+> [!IMPORTANT]
+> SQL no proporciona un mecanismo para expresar la condición «para todo X, P(X)» (P=predicado) → se debe utilizar su equivalente «no existe X tal que no P(X)»
